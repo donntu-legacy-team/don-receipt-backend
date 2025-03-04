@@ -1,6 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
-import { JoinColumn } from 'typeorm/browser';
 
 @Entity({ name: 'categories' })
 export class Category {
@@ -12,6 +11,7 @@ export class Category {
   })
   name: string;
 
+  // TODO(audworth): разобраться с логикой запросов при отношениях
   @OneToMany((type) => Subcategory, (subcategory) => subcategory.parentCategory)
   subcategories: Subcategory[];
 }

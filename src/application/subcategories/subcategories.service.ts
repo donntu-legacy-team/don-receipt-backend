@@ -10,12 +10,13 @@ export class SubcategoriesService {
     private categoriesRepository: Repository<Subcategory>,
   ) {}
 
+  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findAll() {
-    // TODO(audworth): проверить работу метода find и добавить параметры если потребуется
     const subcategories = await this.categoriesRepository.find();
     return subcategories;
   }
 
+  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findSubcategoryById(id: number) {
     const subcategory = await this.categoriesRepository.findOneBy({
       id: id,
@@ -24,6 +25,7 @@ export class SubcategoriesService {
     return subcategory;
   }
 
+  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findSubCategoryByName(subcategoryName: string) {
     const subcategory = await this.categoriesRepository.findOneBy({
       name: subcategoryName,
