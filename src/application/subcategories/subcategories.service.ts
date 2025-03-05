@@ -26,7 +26,7 @@ export class SubcategoriesService {
   }
 
   // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findSubCategoryByName(subcategoryName: string) {
+  async findSubcategoryByName(subcategoryName: string) {
     const subcategory = await this.categoriesRepository.findOneBy({
       name: subcategoryName,
     });

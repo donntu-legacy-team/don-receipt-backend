@@ -10,26 +10,37 @@ export class CategoriesService {
     private categoriesRepository: Repository<Category>,
   ) {}
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { subcategory: true })
   async findAll() {
-    const categories = await this.categoriesRepository.find();
+    const categories = await this.categoriesRepository.find({
+      relations: {
+        subcategories: true,
+      },
+    });
 
     return categories;
   }
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { subcategory: true })
   async findCategoryById(id: number) {
-    const category = await this.categoriesRepository.findOneBy({
-      id: id,
+    const category = await this.categoriesRepository.findOne({
+      where: {
+        id: id,
+      },
+      relations: {
+        subcategories: true,
+      },
     });
 
     return category;
   }
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { subcategory: true })
   async findCategoryByName(categoryName: string) {
-    const category = await this.categoriesRepository.findOneBy({
-      name: categoryName,
+    const category = await this.categoriesRepository.findOne({
+      where: {
+        name: categoryName,
+      },
+      relations: {
+        subcategories: true,
+      },
     });
 
     return category;

@@ -11,7 +11,6 @@ export class Subcategory {
   })
   name: string;
 
-  // TODO(audworth): разобраться с логикой запросов при отношениях
   @ManyToOne((type) => Category, (category) => category.subcategories)
   parentCategory: Category;
 }
