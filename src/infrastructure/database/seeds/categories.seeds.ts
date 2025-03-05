@@ -129,15 +129,15 @@ const CategoriesFactory = setSeederFactory(Category, (faker): Category => {
       'Произошла ошибка при получении сида из заранее заготовленных данных',
     );
   }
+
   const category = new Category();
-  // FIXME(audworth): Заменить на генерацию рандомного числа
   category.id = faker.number.int({ min: 1, max: 20000 });
   category.name = categorySeed.name;
+
   const subcategories = new Array<Subcategory>();
   for (let i = 0; i < categorySeed.subcategories.length; i++) {
     const subcategory = new Subcategory();
-    // FIXME(audworth): Заменить на генерацию рандомного числа
-    subcategory.id = faker.number.int({ min: 1, max: 20000 });
+    subcategory.id = faker.number.int({ min: 1, max: 50000 });
     subcategory.name = categorySeed.subcategories[i];
     subcategory.parentCategory = category;
     subcategories.push(subcategory);

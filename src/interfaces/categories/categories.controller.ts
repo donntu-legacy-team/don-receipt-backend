@@ -2,6 +2,7 @@ import {
   ApiExtraModels,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   getSchemaPath,
 } from '@nestjs/swagger';
 import { Controller, Get, Inject, Res } from '@nestjs/common';
@@ -27,6 +28,10 @@ export class CategoriesController {
         categories: { $ref: getSchemaPath(CategoryDto) },
       },
     },
+  })
+  @ApiOperation({
+    summary: 'Получить все категории',
+    description: 'Получить все категории с подкатегориями',
   })
   async getCategories(@Res() res: Response) {
     const categories = await this.categoriesService.findAll();

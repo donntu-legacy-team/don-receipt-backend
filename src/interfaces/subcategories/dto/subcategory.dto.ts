@@ -1,9 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SubcategoryDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'ID подкатегории',
+    example: '1',
+  })
   id: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Название подкатегории',
+    example: 'Холодные салаты',
+  })
   name: string;
 }
