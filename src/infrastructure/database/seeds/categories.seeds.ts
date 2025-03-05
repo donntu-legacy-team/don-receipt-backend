@@ -10,39 +10,140 @@ import { runSeeders, SeederOptions } from 'typeorm-extension';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
+type categorySeed = {
+  name: string;
+  subcategories: string[];
+};
+
+const categoriesSeeds: categorySeed[] = [
+  {
+    name: 'Супы',
+    subcategories: [
+      'Овощные супы',
+      'Крем-супы',
+      'Бульоны',
+      'Рыбные супы',
+      'Мясные супы',
+    ],
+  },
+  {
+    name: 'Салаты',
+    subcategories: [
+      'Овощные салаты',
+      'Фруктовые салаты',
+      'Мясные салаты',
+      'Тёплые салаты',
+      'Салаты с морепродуктами',
+    ],
+  },
+  {
+    name: 'Основные блюда',
+    subcategories: [
+      'Мясные блюда',
+      'Блюда из птицы',
+      'Рыбные блюда',
+      'Блюда из овощей',
+      'Вегетарианские блюда',
+    ],
+  },
+  {
+    name: 'Десерты',
+    subcategories: ['Торты', 'Пирожные', 'Муссы', 'Желе', 'Запечённые фрукты'],
+  },
+  {
+    name: 'Напитки',
+    subcategories: [
+      'Горячие напитки',
+      'Холодные напитки',
+      'Смузи',
+      'Алкогольные напитки',
+      'Безалкогольные напитки',
+    ],
+  },
+  {
+    name: 'Закуски',
+    subcategories: [
+      'Холодные закуски',
+      'Горячие закуски',
+      'Канапе',
+      'Сэндвичи',
+      'Роллы',
+    ],
+  },
+  {
+    name: 'Гарниры',
+    subcategories: [
+      'Картофельные гарниры',
+      'Овощные гарниры',
+      'Крупы',
+      'Макаронные изделия',
+      'Бобовые',
+    ],
+  },
+  {
+    name: 'Выпечка',
+    subcategories: ['Пироги', 'Булочки', 'Печенье', 'Кексы', 'Хлеб'],
+  },
+  {
+    name: 'Соусы и маринады',
+    subcategories: [
+      'Томатные соусы',
+      'Сливочные соусы',
+      'Пряные соусы',
+      'Маринады',
+      'Пикантные соусы',
+    ],
+  },
+  {
+    name: 'Завтраки',
+    subcategories: [
+      'Каши',
+      'Омлеты',
+      'Блины',
+      'Тосты и бутерброды',
+      'Выпечка к чаю',
+    ],
+  },
+];
+
 class CategoriesSeeder implements Seeder {
   public async run(
     dataSource: DataSource,
     factoryManager: SeederFactoryManager,
   ): Promise<any> {
-    const categoriesAmount = 20;
     const categoryFactory = factoryManager.get(Category);
 
-    for (let i = 0; i < categoriesAmount; i++) {
+    for (let i = categoriesSeeds.length; i > 0; i--) {
       const category = await categoryFactory.make();
       await dataSource.getRepository(Category).save(category);
       await dataSource.getRepository(Subcategory).save(category.subcategories);
+      categoriesSeeds.pop();
     }
   }
 }
 
-const CategoriesFactory = setSeederFactory(Category, (faker) => {
-  const subcategoriesAmount = 5;
+const CategoriesFactory = setSeederFactory(Category, (faker): Category => {
+  const categorySeed = categoriesSeeds.at(-1);
+  if (categorySeed === undefined) {
+    throw new Error(
+      'Произошла ошибка при получении сида из заранее заготовленных данных',
+    );
+  }
   const category = new Category();
-  category.id = faker.number.int({ min: 1, max: 2000000 });
-  category.name = faker.string.uuid();
-
+  // FIXME(audworth): Заменить на генерацию рандомного числа
+  category.id = faker.number.int({ min: 1, max: 20000 });
+  category.name = categorySeed.name;
   const subcategories = new Array<Subcategory>();
-  for (let i = 0; i < subcategoriesAmount; i++) {
+  for (let i = 0; i < categorySeed.subcategories.length; i++) {
     const subcategory = new Subcategory();
-    subcategory.id = faker.number.int({ min: 1, max: 2000000 });
-    subcategory.name = faker.string.uuid();
+    // FIXME(audworth): Заменить на генерацию рандомного числа
+    subcategory.id = faker.number.int({ min: 1, max: 20000 });
+    subcategory.name = categorySeed.subcategories[i];
     subcategory.parentCategory = category;
     subcategories.push(subcategory);
   }
   category.subcategories = subcategories;
 
-  console.log(category);
   return category;
 });
 
