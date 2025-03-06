@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
-// @ApiExtraModels(SubcategoryDto)
 export class CategoryDto {
   @ApiProperty({
     description: 'ID категории',
