@@ -42,9 +42,7 @@ export class CategoriesController {
       });
     }
 
-    const categoriesDto = new Array<CategoryDto>();
-
-    categories.forEach((category) => {
+    const categoriesDto = categories.map((category) => {
       const categoryDto = new CategoryDto();
       categoryDto.id = category.id;
       categoryDto.name = category.name;
@@ -55,7 +53,7 @@ export class CategoriesController {
         subcategoryDto.name = subcategory.name;
         categoryDto.subcategories.push(subcategoryDto);
       });
-      categoriesDto.push(categoryDto);
+      return categoryDto;
     });
 
     return res.status(200).json({

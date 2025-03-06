@@ -7,18 +7,18 @@ import { Repository } from 'typeorm';
 export class SubcategoriesService {
   constructor(
     @InjectRepository(Subcategory)
-    private categoriesRepository: Repository<Subcategory>,
+    private subcategoriesRepository: Repository<Subcategory>,
   ) {}
 
   // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findAll() {
-    const subcategories = await this.categoriesRepository.find();
+    const subcategories = await this.subcategoriesRepository.find();
     return subcategories;
   }
 
   // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findSubcategoryById(id: number) {
-    const subcategory = await this.categoriesRepository.findOneBy({
+    const subcategory = await this.subcategoriesRepository.findOneBy({
       id: id,
     });
 
@@ -27,7 +27,7 @@ export class SubcategoriesService {
 
   // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
   async findSubcategoryByName(subcategoryName: string) {
-    const subcategory = await this.categoriesRepository.findOneBy({
+    const subcategory = await this.subcategoriesRepository.findOneBy({
       name: subcategoryName,
     });
 

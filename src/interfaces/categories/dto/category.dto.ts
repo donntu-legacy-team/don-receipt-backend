@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
+// @ApiExtraModels(SubcategoryDto)
 export class CategoryDto {
   @ApiProperty({
     description: 'ID категории',
@@ -17,11 +18,6 @@ export class CategoryDto {
   @ApiProperty({
     type: [SubcategoryDto],
     description: 'Массив подкатегорий данной категории',
-    example: [
-      'id: 1, name: Холодные салаты',
-      'id: 2, name: Салаты с морепродуктами',
-      'id: 3, name: Мясные салаты',
-    ],
   })
   subcategories: SubcategoryDto[];
 }
