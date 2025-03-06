@@ -10,6 +10,7 @@ services:
       POSTGRES_USERNAME: "root"
       POSTGRES_PASSWORD: "root"
       POSTGRES_DATABASE: "don_receipt"
+      BCRYPT_SALT_ROUNDS: "10"
     depends_on:
       postgres:
         condition: service_healthy
