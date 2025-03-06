@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRole } from '@/domain/users/user.entity';
 
 export class UserDto {
   @ApiProperty()
@@ -6,4 +7,22 @@ export class UserDto {
 
   @ApiProperty()
   username: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  avatar_url: string;
+
+  @ApiProperty()
+  email_confirmed: boolean;
+
+  @ApiProperty()
+  role: UserRole;
+
+  @ApiProperty()
+  registered_at: Date;
+
+  @ApiProperty()
+  updated_at: Date;
 }
