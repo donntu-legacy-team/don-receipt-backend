@@ -3,12 +3,12 @@ import {
   Controller,
   Get,
   Inject,
+  NotFoundException,
+  BadRequestException,
   Post,
   Query,
-  Res,
 } from '@nestjs/common';
 import { UsersService } from '@/application/users/users.service';
-import { Response } from 'express';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import {
   ApiBadRequestResponse,
@@ -27,36 +27,34 @@ export class UsersController {
   @Get()
   @ApiExtraModels(UserDto)
   @ApiNotFoundResponse({
-    description: 'User Not Found',
+    description: 'User not found',
     type: ErrorDto,
   })
   @ApiOkResponse({
+    description: 'User retrieved successfully',
     schema: {
       properties: {
         user: { $ref: getSchemaPath(UserDto) },
       },
     },
   })
-  async getUsers(@Query('id') id: number, @Res() res: Response) {
+  async getUsers(@Query('id') id: number): Promise<{ user: UserDto }> {
     const user = await this.usersService.findUserById(id);
-
     if (!user) {
-      return res.status(404).json({
-        message: 'User not found',
-      });
+      throw new NotFoundException('User not found');
     }
 
     const userDto = new UserDto();
     userDto.id = user.id;
     userDto.username = user.username;
-    return res.status(200).json({
-      user: userDto,
-    });
+    userDto.email = user.email;
+    return { user: userDto };
   }
 
   @Post()
   @ApiExtraModels(UserDto)
   @ApiOkResponse({
+    description: 'User created successfully',
     schema: {
       properties: {
         user: { $ref: getSchemaPath(UserDto) },
@@ -64,22 +62,23 @@ export class UsersController {
     },
   })
   @ApiBadRequestResponse({
+    description: 'User with this username or email already exists',
     type: ErrorDto,
   })
-  async createUser(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
+  async createUser(
+    @Body() createUserDto: CreateUserDto,
+  ): Promise<{ user: UserDto }> {
     const user = await this.usersService.createUser(createUserDto);
-
     if (!user) {
-      return res.status(400).json({
-        message: 'User already exists',
-      });
+      throw new BadRequestException(
+        'User with this username or email already exists',
+      );
     }
 
     const userDto = new UserDto();
     userDto.id = user.id;
     userDto.username = user.username;
-    return res.status(200).json({
-      user: userDto,
-    });
+    userDto.email = user.email;
+    return { user: userDto };
   }
 }

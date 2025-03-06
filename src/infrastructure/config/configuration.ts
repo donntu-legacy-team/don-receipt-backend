@@ -1,6 +1,7 @@
 import * as process from 'node:process';
 
-export const DEVELOPMENT_ENV_PATH = '.env.development';
+export const DEVELOPMENT_ENV_PATH = '' +
+  '.env.development';
 
 export type Environment = 'dev' | 'prod';
 
