@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
+import { Category } from '@/domain/categories/category.entity';
 
 export class CategoryDto {
   @ApiProperty({
@@ -19,4 +20,22 @@ export class CategoryDto {
     description: 'Массив подкатегорий данной категории',
   })
   subcategories: SubcategoryDto[];
+
+  public constructor(category?: Category) {
+    if (!category) {
+      return;
+    }
+    this.id = category.id;
+    this.name = category.name;
+  }
+
+  public withId(id: number) {
+    this.id = id;
+    return this;
+  }
+
+  public withName(name: string) {
+    this.name = name;
+    return this;
+  }
 }

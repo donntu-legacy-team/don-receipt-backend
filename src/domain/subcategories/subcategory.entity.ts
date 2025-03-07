@@ -13,4 +13,9 @@ export class Subcategory {
 
   @ManyToOne((type) => Category, (category) => category.subcategories)
   parentCategory: Category;
+
+  public constructor(id: number, name: string) {
+    this.id = id;
+    this.name = name;
+  }
 }

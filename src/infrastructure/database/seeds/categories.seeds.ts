@@ -10,12 +10,12 @@ import { runSeeders, SeederOptions } from 'typeorm-extension';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
-type categorySeed = {
+type CategorySeed = {
   name: string;
   subcategories: string[];
 };
 
-const categoriesSeeds: categorySeed[] = [
+const categoriesSeeds: CategorySeed[] = [
   {
     name: 'Супы',
     subcategories: [
@@ -124,25 +124,24 @@ class CategoriesSeeder implements Seeder {
 
 const CategoriesFactory = setSeederFactory(Category, (faker): Category => {
   const categorySeed = categoriesSeeds.at(-1);
-  if (categorySeed === undefined) {
+  if (!categorySeed) {
     throw new Error(
       'Произошла ошибка при получении сида из заранее заготовленных данных',
     );
   }
 
-  const category = new Category();
-  category.id = faker.number.int({ min: 1, max: 20000 });
-  category.name = categorySeed.name;
-
-  const subcategories = new Array<Subcategory>();
-  for (let i = 0; i < categorySeed.subcategories.length; i++) {
-    const subcategory = new Subcategory();
-    subcategory.id = faker.number.int({ min: 1, max: 50000 });
-    subcategory.name = categorySeed.subcategories[i];
+  const category = new Category(
+    faker.number.int({ min: 1, max: 20000 }),
+    categorySeed.name,
+  );
+  category.subcategories = categorySeed.subcategories.map((subcategoryName) => {
+    const subcategory = new Subcategory(
+      faker.number.int({ min: 1, max: 50000 }),
+      subcategoryName,
+    );
     subcategory.parentCategory = category;
-    subcategories.push(subcategory);
-  }
-  category.subcategories = subcategories;
+    return subcategory;
+  });
 
   return category;
 });

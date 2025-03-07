@@ -43,16 +43,16 @@ export class CategoriesController {
     }
 
     const categoriesDto = categories.map((category) => {
-      const categoryDto = new CategoryDto();
-      categoryDto.id = category.id;
-      categoryDto.name = category.name;
-      categoryDto.subcategories = new Array<SubcategoryDto>();
-      category.subcategories.forEach((subcategory) => {
-        const subcategoryDto = new SubcategoryDto();
-        subcategoryDto.id = subcategory.id;
-        subcategoryDto.name = subcategory.name;
-        categoryDto.subcategories.push(subcategoryDto);
+      const categoryDto = new CategoryDto()
+        .withId(category.id)
+        .withName(category.name);
+      categoryDto.subcategories = category.subcategories.map((subcategory) => {
+        const subcategoryDto = new SubcategoryDto()
+          .withId(subcategory.id)
+          .withName(subcategory.name);
+        return subcategoryDto;
       });
+
       return categoryDto;
     });
 

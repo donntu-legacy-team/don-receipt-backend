@@ -13,4 +13,9 @@ export class Category {
 
   @OneToMany((type) => Subcategory, (subcategory) => subcategory.parentCategory)
   subcategories: Subcategory[];
+
+  public constructor(id: number, name: string) {
+    this.id = id;
+    this.name = name;
+  }
 }
