@@ -40,11 +40,11 @@ export class UsersService {
     return user;
   }
 
-  async findUserById(id: number): Promise<User | null> {
+  async findUserById(id: number) {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async findUserByUsername(username: string): Promise<User | null> {
+  async findUserByUsername(username: string) {
     return this.usersRepository.findOneBy({ username });
   }
 }
