@@ -9,6 +9,8 @@ declare global {
       POSTGRES_USERNAME?: string;
       POSTGRES_PASSWORD?: string;
       POSTGRES_DATABASE?: string;
+
+      BCRYPT_SALT_ROUNDS?: string;
     }
   }
 }

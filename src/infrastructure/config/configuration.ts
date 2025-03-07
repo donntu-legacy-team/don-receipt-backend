@@ -18,6 +18,9 @@ export type Configuration = {
     databaseName: string;
     synchronize: boolean;
   };
+  security: {
+    bcryptSaltRounds: number;
+  };
 };
 
 export const config = (): Configuration => {
@@ -29,17 +32,24 @@ export const config = (): Configuration => {
     env: isDev ? 'dev' : 'prod',
     http: {
       host: process.env.HTTP_HOST ?? 'localhost',
-      port: process.env.HTTP_PORT ? parseInt(process.env.HTTP_PORT) : 3000,
+      port: process.env.HTTP_PORT
+        ? parseInt(process.env.HTTP_PORT, 10)
+        : 3000,
     },
     database: {
       host: process.env.POSTGRES_HOST ?? 'localhost',
       port: process.env.POSTGRES_PORT
-        ? parseInt(process.env.POSTGRES_PORT)
+        ? parseInt(process.env.POSTGRES_PORT, 10)
         : 5432,
       username: process.env.POSTGRES_USERNAME ?? 'root',
       password: process.env.POSTGRES_PASSWORD ?? 'root',
       databaseName: process.env.POSTGRES_DATABASE ?? 'don_receipt',
       synchronize: isDev,
+    },
+    security: {
+      bcryptSaltRounds: process.env.BCRYPT_SALT_ROUNDS
+        ? parseInt(process.env.BCRYPT_SALT_ROUNDS, 10)
+        : 10,
     },
   };
 };
