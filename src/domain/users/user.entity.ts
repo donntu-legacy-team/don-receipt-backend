@@ -22,19 +22,19 @@ export class User {
   email: string;
 
   @Column()
-  password_hash: string;
+  passwordHash: string;
 
   @Column({
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  registered_at: Date;
+  registeredAt: Date;
 
   @Column({ nullable: true })
-  avatar_url: string;
+  avatarUrl: string;
 
   @Column({ default: false })
-  email_confirmed: boolean;
+  emailConfirmed: boolean;
 
   @Column({
     type: 'enum',
@@ -48,5 +48,6 @@ export class User {
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at: Date;
+  updatedAt: Date;
 }
+

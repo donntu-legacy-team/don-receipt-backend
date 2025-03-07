@@ -3,7 +3,7 @@ import { CreateUserParams } from '@/application/users/users.types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/domain/users/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
@@ -12,11 +12,14 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async createUser(createUserParams: CreateUserParams) {
+  async createUser(createUserParams: CreateUserParams): Promise<User | null> {
+    const usernameLowerCase = createUserParams.username.toLowerCase();
+    const emailLowerCase = createUserParams.email.toLowerCase();
+
     const foundUser = await this.usersRepository.findOne({
       where: [
-        { username: createUserParams.username },
-        { email: createUserParams.email },
+        { username: usernameLowerCase },
+        { email: emailLowerCase },
       ],
     });
 
@@ -24,25 +27,24 @@ export class UsersService {
       return null;
     }
 
-    const passwordHash = await bcrypt.hash(createUserParams.password, 10);
+    const hashedPassword = await bcrypt.hash(createUserParams.password, 10);
 
     const user = this.usersRepository.create({
-      username: createUserParams.username,
-      email: createUserParams.email,
-      password_hash: passwordHash,
-      registered_at: new Date(),
-      updated_at: new Date(),
+      username: usernameLowerCase,
+      email: emailLowerCase,
+      passwordHash: hashedPassword,
     });
 
     await this.usersRepository.save(user);
+
     return user;
   }
 
-  async findUserById(id: number) {
+  async findUserById(id: number): Promise<User | null> {
     return this.usersRepository.findOneBy({ id });
   }
 
-  async findUserByUsername(username: string) {
+  async findUserByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOneBy({ username });
   }
 }

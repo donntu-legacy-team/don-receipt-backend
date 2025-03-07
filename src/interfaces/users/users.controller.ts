@@ -38,17 +38,12 @@ export class UsersController {
       },
     },
   })
-  async getUsers(@Query('id') id: number): Promise<{ user: UserDto }> {
+  async getUsers(@Query('id') id: number) {
     const user = await this.usersService.findUserById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    const userDto = new UserDto();
-    userDto.id = user.id;
-    userDto.username = user.username;
-    userDto.email = user.email;
-    return { user: userDto };
+    return { user: new UserDto(user) };
   }
 
   @Post()
@@ -65,9 +60,7 @@ export class UsersController {
     description: 'User with this username or email already exists',
     type: ErrorDto,
   })
-  async createUser(
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<{ user: UserDto }> {
+  async createUser(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.createUser(createUserDto);
     if (!user) {
       throw new BadRequestException(
@@ -75,10 +68,11 @@ export class UsersController {
       );
     }
 
-    const userDto = new UserDto();
+    const userDto = new UserDto(user);
     userDto.id = user.id;
     userDto.username = user.username;
     userDto.email = user.email;
+
     return { user: userDto };
   }
 }
