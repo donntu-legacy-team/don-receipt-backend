@@ -9,10 +9,11 @@ import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
 import { successResponse, errorResponse } from '@/interfaces/common/response';
-import { CATEGORIES_NOT_FOUND } from '@/interfaces/common/categories';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
+
+const CATEGORIES_NOT_FOUND = 'Categories Not Found';
 
 @Controller('categories')
 export class CategoriesController {
