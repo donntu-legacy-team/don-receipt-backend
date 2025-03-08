@@ -110,7 +110,7 @@ class CategoriesSeeder implements Seeder {
   public async run(
     dataSource: DataSource,
     factoryManager: SeederFactoryManager,
-  ): Promise<any> {
+  ) {
     const categoryFactory = factoryManager.get(Category);
 
     for (let i = categoriesSeeds.length; i > 0; i--) {
@@ -160,10 +160,9 @@ const options: DataSourceOptions & SeederOptions = {
   seeds: [CategoriesSeeder],
 };
 
-const dataSource = new DataSource(options);
-
-dataSource.initialize().then(async () => {
+(async () => {
+  const dataSource = new DataSource(options);
+  await dataSource.initialize();
   await dataSource.synchronize(true);
   await runSeeders(dataSource);
-  process.exit();
-});
+})();

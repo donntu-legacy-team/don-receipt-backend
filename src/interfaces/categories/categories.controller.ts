@@ -8,6 +8,8 @@ import {
 import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
+import { successResponse, errorResponse } from '@/interfaces/common/response';
+import { CATEGORIES_NOT_FOUND } from '@/interfaces/common/categories';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
@@ -19,7 +21,7 @@ export class CategoriesController {
   @Get()
   @ApiExtraModels(CategoryDto)
   @ApiNotFoundResponse({
-    description: 'Category Not Found',
+    description: CATEGORIES_NOT_FOUND,
     type: ErrorDto,
   })
   @ApiOkResponse({
@@ -30,34 +32,25 @@ export class CategoriesController {
     },
   })
   @ApiOperation({
-    summary: 'Получить все категории',
-    description: 'Получить все категории с подкатегориями',
+    summary: 'Получить все категории c их подкатегориями',
   })
   async getCategories(@Res() res: Response) {
     const categories = await this.categoriesService.findAll();
 
     if (!categories.length) {
-      return res.status(404).json({
-        message: 'Categories not found',
-      });
+      return errorResponse(res, CATEGORIES_NOT_FOUND);
     }
 
     const categoriesDto = categories.map((category) => {
-      const categoryDto = new CategoryDto()
-        .withId(category.id)
-        .withName(category.name);
+      const categoryDto = new CategoryDto(category);
       categoryDto.subcategories = category.subcategories.map((subcategory) => {
-        const subcategoryDto = new SubcategoryDto()
-          .withId(subcategory.id)
-          .withName(subcategory.name);
+        const subcategoryDto = new SubcategoryDto(subcategory);
         return subcategoryDto;
       });
 
       return categoryDto;
     });
 
-    return res.status(200).json({
-      categories: categoriesDto,
-    });
+    return successResponse(res, { categories: categoriesDto });
   }
 }
