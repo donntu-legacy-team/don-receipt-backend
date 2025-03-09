@@ -22,8 +22,8 @@ import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { successResponse, errorResponse } from '@/interfaces/common/response';
 import {
-  USER_NOT_FOUND,
-  USER_ALREADY_EXISTS,
+  USER_NOT_FOUND_MESSAGE,
+  USER_ALREADY_EXISTS_MESSAGE,
 } from '@/interfaces/constants/user.constants';
 
 @Controller('users')
@@ -34,7 +34,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Найти пользователя по id' })
   @ApiExtraModels(UserDto)
   @ApiNotFoundResponse({
-    description: USER_NOT_FOUND,
+    description: USER_NOT_FOUND_MESSAGE,
     type: ErrorDto,
   })
   @ApiOkResponse({
@@ -48,9 +48,9 @@ export class UsersController {
   async getUserById(@Res() res: Response, @Query('id') id: number) {
     const user = await this.usersService.findUserById(id);
     if (!user) {
-      return errorResponse(res, USER_NOT_FOUND, 404);
+      return errorResponse(res, USER_NOT_FOUND_MESSAGE);
     }
-    return successResponse(res, { user: new UserDto(user) }, 200);
+    return successResponse(res, { user: new UserDto(user) });
   }
 
   @Post()
@@ -65,14 +65,14 @@ export class UsersController {
     },
   })
   @ApiBadRequestResponse({
-    description: USER_ALREADY_EXISTS,
+    description: USER_ALREADY_EXISTS_MESSAGE,
     type: ErrorDto,
   })
   async createUser(@Res() res: Response, @Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.createUser(createUserDto);
     if (!user) {
-      return errorResponse(res, USER_ALREADY_EXISTS, 400);
+      return errorResponse(res, USER_ALREADY_EXISTS_MESSAGE);
     }
-    return successResponse(res, { user: new UserDto(user) }, 200);
+    return successResponse(res, { user: new UserDto(user) });
   }
 }
