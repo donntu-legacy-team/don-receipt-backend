@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '@/domain/users/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { config } from '@/infrastructure/config/configuration';
 
 @Injectable()
 export class UsersService {
@@ -12,31 +13,31 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
   ) {}
 
-  async createUser(createUserParams: CreateUserParams): Promise<User | null> {
-    const usernameLowerCase = createUserParams.username.toLowerCase();
-    const emailLowerCase = createUserParams.email.toLowerCase();
-
-    const foundUser = await this.usersRepository.findOne({
-      where: [
-        { username: usernameLowerCase },
-        { email: emailLowerCase },
-      ],
-    });
+  async createUser(createUserParams: CreateUserParams) {
+    const foundUser = await this.usersRepository
+      .createQueryBuilder('u')
+      .where('LOWER(u.username) = LOWER(:username)', {
+        username: createUserParams.username,
+      })
+      .orWhere('LOWER(u.email) = LOWER(:email)', {
+        email: createUserParams.email,
+      })
+      .getOne();
 
     if (foundUser) {
       return null;
     }
 
-    const hashedPassword = await bcrypt.hash(createUserParams.password, 10);
+    const saltRounds = config().security.bcryptSaltRounds;
+    const hashedPassword = await bcrypt.hash(createUserParams.password, saltRounds);
 
     const user = this.usersRepository.create({
-      username: usernameLowerCase,
-      email: emailLowerCase,
+      username: createUserParams.username,
+      email: createUserParams.email,
       passwordHash: hashedPassword,
     });
 
     await this.usersRepository.save(user);
-
     return user;
   }
 

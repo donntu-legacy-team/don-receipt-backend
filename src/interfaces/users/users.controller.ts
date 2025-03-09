@@ -3,31 +3,38 @@ import {
   Controller,
   Get,
   Inject,
-  NotFoundException,
-  BadRequestException,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
-import { UsersService } from '@/application/users/users.service';
-import { UserDto } from '@/interfaces/users/dto/user.dto';
+import { Response } from 'express';
 import {
   ApiBadRequestResponse,
   ApiExtraModels,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   getSchemaPath,
 } from '@nestjs/swagger';
+import { UsersService } from '@/application/users/users.service';
+import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
+import { successResponse, errorResponse } from '@/interfaces/common/response';
+import {
+  USER_NOT_FOUND,
+  USER_ALREADY_EXISTS,
+} from '@/interfaces/constants/user.constants';
 
 @Controller('users')
 export class UsersController {
   constructor(@Inject() private usersService: UsersService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Найти пользователя по id' })
   @ApiExtraModels(UserDto)
   @ApiNotFoundResponse({
-    description: 'User not found',
+    description: USER_NOT_FOUND,
     type: ErrorDto,
   })
   @ApiOkResponse({
@@ -38,15 +45,16 @@ export class UsersController {
       },
     },
   })
-  async getUsers(@Query('id') id: number) {
+  async getUserById(@Res() res: Response, @Query('id') id: number) {
     const user = await this.usersService.findUserById(id);
     if (!user) {
-      throw new NotFoundException('User not found');
+      return errorResponse(res, USER_NOT_FOUND, 404);
     }
-    return { user: new UserDto(user) };
+    return successResponse(res, { user: new UserDto(user) }, 200);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Создать пользователя' })
   @ApiExtraModels(UserDto)
   @ApiOkResponse({
     description: 'User created successfully',
@@ -57,22 +65,14 @@ export class UsersController {
     },
   })
   @ApiBadRequestResponse({
-    description: 'User with this username or email already exists',
+    description: USER_ALREADY_EXISTS,
     type: ErrorDto,
   })
-  async createUser(@Body() createUserDto: CreateUserDto) {
+  async createUser(@Res() res: Response, @Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.createUser(createUserDto);
     if (!user) {
-      throw new BadRequestException(
-        'User with this username or email already exists',
-      );
+      return errorResponse(res, USER_ALREADY_EXISTS, 400);
     }
-
-    const userDto = new UserDto(user);
-    userDto.id = user.id;
-    userDto.username = user.username;
-    userDto.email = user.email;
-
-    return { user: userDto };
+    return successResponse(res, { user: new UserDto(user) }, 200);
   }
 }
