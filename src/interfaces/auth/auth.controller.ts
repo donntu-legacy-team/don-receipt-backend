@@ -26,7 +26,7 @@ import {
   AUTH_INVALID_CREDENTIALS_MESSAGE,
   AUTH_INVALID_REFRESH_TOKEN_MESSAGE,
   AUTH_USER_NOT_FOUND_MESSAGE,
-} from '@/interfaces/constants/auth.constants';
+} from '@/interfaces/auth/auth-response-messages-constants';
 
 @ApiTags('Авторизация')
 @Controller('auth')

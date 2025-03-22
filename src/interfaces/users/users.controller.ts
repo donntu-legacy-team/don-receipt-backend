@@ -24,7 +24,7 @@ import { successResponse, errorResponse } from '@/interfaces/common/response';
 import {
   USER_NOT_FOUND_MESSAGE,
   USER_ALREADY_EXISTS_MESSAGE,
-} from '@/interfaces/constants/user.constants';
+} from '@/interfaces/users/users-response-messages-constants';
 
 @Controller('users')
 export class UsersController {

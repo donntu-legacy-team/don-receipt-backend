@@ -58,11 +58,11 @@ export const config = (): Configuration => {
         : 10,
       jwtAccessSecret:
         process.env.JWT_ACCESS_SECRET ||
-        '295bbf4f1f77c6d0c83b5be7a8c2ab4fda34035fdb39d7b350fa9e584b039e77',
+        'DO_NOT_USE_THIS_SECRET',
       jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '2h',
       jwtRefreshSecret:
         process.env.JWT_REFRESH_SECRET ||
-        '15cd5c7b2e76fcfd34be5d5011479ea0119d3a5485a99e6a4955c72131693ab3',
+        'DO_NOT_USE_THIS_SECRET',
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
     },
   };
