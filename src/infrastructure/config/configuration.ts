@@ -4,6 +4,14 @@ export const DEVELOPMENT_ENV_PATH = '.env.development';
 
 export type Environment = 'dev' | 'prod';
 
+export interface SecurityConfig {
+  bcryptSaltRounds: number;
+  jwtAccessSecret: string;
+  jwtAccessExpiresIn: string;
+  jwtRefreshSecret: string;
+  jwtRefreshExpiresIn: string;
+}
+
 export type Configuration = {
   env: Environment;
   http: {
@@ -18,9 +26,7 @@ export type Configuration = {
     databaseName: string;
     synchronize: boolean;
   };
-  security: {
-    bcryptSaltRounds: number;
-  };
+  security: SecurityConfig;
 };
 
 export const config = (): Configuration => {
@@ -39,9 +45,8 @@ export const config = (): Configuration => {
     database: {
       host: process.env.POSTGRES_HOST ?? 'localhost',
       port: process.env.POSTGRES_PORT
-        ? parseInt(process.env.POSTGRES_PORT)
-        : // TODO(audworth): DONRECEIPT-16
-          5433,
+        ? parseInt(process.env.POSTGRES_PORT, 10)
+        : 5433,
       username: process.env.POSTGRES_USERNAME ?? 'root',
       password: process.env.POSTGRES_PASSWORD ?? 'root',
       databaseName: process.env.POSTGRES_DATABASE ?? 'don_receipt',
@@ -51,6 +56,14 @@ export const config = (): Configuration => {
       bcryptSaltRounds: process.env.BCRYPT_SALT_ROUNDS
         ? parseInt(process.env.BCRYPT_SALT_ROUNDS, 10)
         : 10,
+      jwtAccessSecret:
+        process.env.JWT_ACCESS_SECRET ||
+        '295bbf4f1f77c6d0c83b5be7a8c2ab4fda34035fdb39d7b350fa9e584b039e77',
+      jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '2h',
+      jwtRefreshSecret:
+        process.env.JWT_REFRESH_SECRET ||
+        '15cd5c7b2e76fcfd34be5d5011479ea0119d3a5485a99e6a4955c72131693ab3',
+      jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
     },
   };
 };
