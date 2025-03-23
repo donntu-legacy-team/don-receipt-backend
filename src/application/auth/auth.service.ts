@@ -18,7 +18,7 @@ export class AuthService {
       return null;
     }
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    return user || null;
+    return isMatch ? user : null;
   }
 
   async login(username: string, password: string) {
