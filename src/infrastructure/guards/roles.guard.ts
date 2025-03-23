@@ -3,6 +3,7 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole, User } from '@/domain/users/user.entity';
@@ -11,7 +12,7 @@ import { UserRole, User } from '@/domain/users/user.entity';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  canActivate(context: ExecutionContext) {
     const requiredRoles = this.reflector.get<UserRole[]>(
       'roles',
       context.getHandler(),
@@ -24,7 +25,7 @@ export class RolesGuard implements CanActivate {
     const user: User = request.user;
 
     if (!user) {
-      return false;
+      throw new UnauthorizedException('User not found');
     }
 
     if (!requiredRoles.includes(user.role)) {
