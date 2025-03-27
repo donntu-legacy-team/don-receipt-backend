@@ -9,8 +9,9 @@ declare global {
       POSTGRES_USERNAME?: string;
       POSTGRES_PASSWORD?: string;
       POSTGRES_DATABASE?: string;
-
       BCRYPT_SALT_ROUNDS?: string;
+      JWT_ACCESS_EXPIRES_IN?: string;
+      JWT_REFRESH_EXPIRES_IN?: string;
     }
   }
 }

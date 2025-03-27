@@ -11,6 +11,6 @@ export class Subcategory {
   })
   name: string;
 
-  @ManyToOne((type) => Category, (category) => category.subcategories)
+  @ManyToOne(() => Category, (category) => category.subcategories)
   parentCategory: Category;
 }

@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { UsersService } from '@/application/users/users.service';
 import { config } from '@/infrastructure/config/configuration';
 import { User } from '@/domain/users/user.entity';
+import { TokenPayload } from '@/application/auth/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -23,33 +24,32 @@ export class AuthService {
 
   async login(username: string, password: string) {
     const user = await this.validateUser(username, password);
+
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      return { user };
     }
+
     const tokens = this.generateTokens(user);
+
     return { user, ...tokens };
   }
 
   async refreshTokens(refreshToken: string) {
-    try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: config().security.jwtRefreshSecret,
-      });
+    const payload = this.jwtService.verify<TokenPayload>(refreshToken, {
+      secret: config().security.jwtRefreshSecret,
+    });
 
-      const user = await this.usersService.findUserByUsername(payload.username);
-      if (!user) {
-        throw new UnauthorizedException('User not found');
-      }
-
-      const tokens = this.generateTokens(user);
-      return { user, ...tokens };
-    } catch (e) {
-      throw new UnauthorizedException('Invalid refresh token');
+    const user = await this.usersService.findUserByUsername(payload.username);
+    if (!user) {
+      return { user };
     }
+
+    const tokens = this.generateTokens(user);
+    return { user, ...tokens };
   }
 
   private generateTokens(user: User) {
-    const payload = {
+    const payload: TokenPayload = {
       sub: user.id,
       username: user.username,
       role: user.role,

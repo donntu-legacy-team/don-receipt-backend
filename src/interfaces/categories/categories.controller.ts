@@ -8,11 +8,14 @@ import {
 import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
-import { successResponse, errorResponse } from '@/interfaces/common/response';
 import { CATEGORIES_NOT_FOUND_MESSAGE } from '@/interfaces/categories/categories-response-messages.constants';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
-import { ErrorDto } from '@/interfaces/common/error-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
+import {
+  errorResponse,
+  successResponse,
+} from '@/interfaces/common/helpers/response.helper';
+import { ErrorDto } from '@/interfaces/common/dto/error.dto';
 
 @Controller('categories')
 export class CategoriesController {
