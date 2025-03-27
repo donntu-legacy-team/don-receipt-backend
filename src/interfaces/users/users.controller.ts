@@ -19,12 +19,15 @@ import {
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
-import { ErrorDto } from '@/interfaces/common/error-dto';
-import { successResponse, errorResponse } from '@/interfaces/common/response';
 import {
   USER_NOT_FOUND_MESSAGE,
   USER_ALREADY_EXISTS_MESSAGE,
 } from '@/interfaces/users/users-response-messages.constants';
+import {
+  errorResponse,
+  successResponse,
+} from '@/interfaces/common/helpers/response.helper';
+import { ErrorDto } from '@/interfaces/common/dto/error.dto';
 
 @Controller('users')
 export class UsersController {

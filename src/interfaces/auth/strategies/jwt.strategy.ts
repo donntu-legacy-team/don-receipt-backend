@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { config } from '@/infrastructure/config/configuration';
 import { UsersService } from '@/application/users/users.service';
-import { User } from '@/domain/users/user.entity';
+import { TokenPayload } from '@/application/auth/auth.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,8 +15,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: TokenPayload) {
     const user = await this.usersService.findUserByUsername(payload.username);
-    return user || null;
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid user credentials');
+    }
+
+    return user;
   }
 }
