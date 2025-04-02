@@ -11,6 +11,6 @@ export class Category {
   })
   name: string;
 
-  @OneToMany((type) => Subcategory, (subcategory) => subcategory.parentCategory)
+  @OneToMany(() => Subcategory, (subcategory) => subcategory.parentCategory)
   subcategories: Subcategory[];
 }
