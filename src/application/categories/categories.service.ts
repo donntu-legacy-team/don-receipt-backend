@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from '@/domain/categories/category.entity';
 import { Repository } from 'typeorm';
+import { Category } from '@/domain/categories/category.entity';
+import { CreateCategoriesParams } from '@/application/categories/categories.types';
 
 @Injectable()
 export class CategoriesService {
@@ -33,15 +34,32 @@ export class CategoriesService {
     return category;
   }
 
-  async findCategoryByName(categoryName: string) {
+  async findCategoryByName(createCategoriesParams: CreateCategoriesParams) {
     const category = await this.categoriesRepository.findOne({
       where: {
-        name: categoryName,
+        name: createCategoriesParams.name,
       },
       relations: {
         subcategories: true,
       },
     });
+
+    return category;
+  }
+
+  async createCategory(createCategoriesParams: CreateCategoriesParams) {
+    const foundCategory = await this.categoriesRepository.findOneBy({
+      name: createCategoriesParams.name,
+    });
+
+    if (foundCategory) {
+      return null;
+    }
+
+    const category = this.categoriesRepository.create({
+      name: createCategoriesParams.name,
+    });
+    await this.categoriesRepository.save(category);
 
     return category;
   }
