@@ -1,18 +1,27 @@
 import {
   ApiBadRequestResponse,
   ApiExtraModels,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { Body, Controller, Get, Inject, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Put, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
-import { successResponse } from '@/interfaces/common/helpers/response.helper';
+import { successResponse, errorResponse } from '@/interfaces/common/helpers/response.helper';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
+import { ErrorDto } from '@/interfaces/common/error-dto';
+import { SuccessDto } from '@/interfaces/common/success-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 import { CreateCategoryDto } from '@/interfaces/categories/dto/create-category.dto';
-import { CATEGORY_ALREADY_EXISTS_MESSAGE } from '@/interfaces/constants/category.constants';
+import { UpdateCategoryDto } from '@/interfaces/categories/dto/update-category.dto';
+import {
+  CATEGORIES_NOT_FOUND_MESSAGE,
+  CATEGORY_ALREADY_EXISTS_MESSAGE,
+  CATEGORY_DOES_NOT_EXIST_MESSAGE,
+  CATEGORY_SUCCESSFULLY_UPDATED,
+} from '@/interfaces/constants/category.constants';
 
 @Controller('categories')
 export class CategoriesController {
@@ -20,6 +29,10 @@ export class CategoriesController {
 
   @Get()
   @ApiExtraModels(CategoryDto)
+  @ApiNotFoundResponse({
+    description: CATEGORIES_NOT_FOUND_MESSAGE,
+    type: ErrorDto,
+  })
   @ApiOkResponse({
     schema: {
       properties: {
@@ -35,6 +48,10 @@ export class CategoriesController {
   })
   async getCategories(@Res() res: Response) {
     const categories = await this.categoriesService.findAll();
+
+    if (!categories.length) {
+      return errorResponse(res, CATEGORIES_NOT_FOUND_MESSAGE);
+    }
 
     const categoriesDto = categories.map((category) => {
       const categoryDto = new CategoryDto(category);
@@ -56,7 +73,7 @@ export class CategoriesController {
     description: 'Category created successfully',
     schema: {
       properties: {
-        user: { $ref: getSchemaPath(CategoryDto) },
+        category: { $ref: getSchemaPath(CategoryDto) },
       },
     },
   })
@@ -74,5 +91,28 @@ export class CategoriesController {
       return errorResponse(res, CATEGORY_ALREADY_EXISTS_MESSAGE);
     }
     return successResponse(res, { category: new CategoryDto(category) });
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Обновить категорию' })
+  @ApiExtraModels(CategoryDto)
+  @ApiOkResponse({
+    description: CATEGORY_SUCCESSFULLY_UPDATED,
+    type: SuccessDto,
+  })
+  @ApiBadRequestResponse({
+    description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
+    type: ErrorDto,
+  })
+  async updateCategory(
+    @Res() res: Response,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
+    const category =
+      await this.categoriesService.updateCategory(updateCategoryDto);
+    if (!category) {
+      return errorResponse(res, CATEGORY_DOES_NOT_EXIST_MESSAGE);
+    }
+    return successResponse(res, CATEGORY_SUCCESSFULLY_UPDATED);
   }
 }
