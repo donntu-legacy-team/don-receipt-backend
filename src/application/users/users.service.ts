@@ -29,7 +29,10 @@ export class UsersService {
     }
 
     const saltRounds = config().security.bcryptSaltRounds;
-    const hashedPassword = await bcrypt.hash(createUserParams.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(
+      createUserParams.password,
+      saltRounds,
+    );
 
     const user = this.usersRepository.create({
       username: createUserParams.username,
