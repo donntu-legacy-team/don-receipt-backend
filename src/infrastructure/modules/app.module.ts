@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersModule } from '@/infrastructure/modules/users.module';
 import { CategoriesModule } from '@/infrastructure/modules/categories.module';
+import { SubcategoriesModule } from '@/infrastructure/modules/subcategories.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from '@/infrastructure/config';
 import { ConfigModule } from '@nestjs/config';
@@ -13,6 +14,7 @@ import { Subcategory } from '@/domain/subcategories/subcategory.entity';
   imports: [
     UsersModule,
     CategoriesModule,
+    SubcategoriesModule,
     ConfigModule.forRoot({
       envFilePath: DEVELOPMENT_ENV_PATH,
     }),
