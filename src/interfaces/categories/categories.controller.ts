@@ -27,7 +27,10 @@ export class CategoriesController {
   @ApiOkResponse({
     schema: {
       properties: {
-        categories: { $ref: getSchemaPath(CategoryDto) },
+        categories: {
+          type: 'array',
+          items: { $ref: getSchemaPath(CategoryDto) },
+        },
       },
     },
   })
