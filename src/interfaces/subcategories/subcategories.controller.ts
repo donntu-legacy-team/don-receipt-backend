@@ -5,7 +5,7 @@ import {
   ApiOperation,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { Body, Controller, Inject, Post, Res } from '@nestjs/common';
+import { Body, Controller, Inject, Post, Res, Put } from '@nestjs/common';
 import { SubcategoriesService } from '@/application/subcategories/subcategories.service';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
@@ -13,8 +13,17 @@ import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Response } from 'express';
 import { CreateSubcategoryDto } from '@/interfaces/subcategories/dto/create-subcategory.dto';
 import { errorResponse, successResponse } from '@/interfaces/common/response';
-import { CATEGORY_DOES_NOT_EXIST_MESSAGE } from '@/interfaces/constants/category.constants';
-import { SUBCATEGORY_ALREADY_EXISTS_MESSAGE } from '@/interfaces/constants/subcategory.constants';
+import {
+  CATEGORY_DOES_NOT_EXIST_MESSAGE,
+  CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
+} from '@/interfaces/constants/category.constants';
+import {
+  SUBCATEGORY_ALREADY_EXISTS_MESSAGE,
+  SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+  SUBCATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
+} from '@/interfaces/constants/subcategory.constants';
+import { SuccessDto } from '@/interfaces/common/success-dto';
+import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 
 @Controller('subcategories')
 export class SubcategoriesController {
@@ -56,8 +65,32 @@ export class SubcategoriesController {
     if (!subcategory) {
       return errorResponse(res, SUBCATEGORY_ALREADY_EXISTS_MESSAGE);
     }
+
     return successResponse(res, {
       subcategory: new SubcategoryDto(subcategory),
     });
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Обновить подкатегорию категории' })
+  @ApiExtraModels(SubcategoryDto)
+  @ApiOkResponse({
+    description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
+    type: SuccessDto,
+  })
+  @ApiBadRequestResponse({
+    description: SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+    type: ErrorDto,
+  })
+  async updateSubcategory(
+    @Res() res: Response,
+    @Body() updateSubcategoryDto: UpdateSubcategoryDto,
+  ) {
+    const subcategory =
+      await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
+    if (!subcategory) {
+      return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
+    }
+    return successResponse(res, SUBCATEGORY_SUCCESSFULLY_UPDATED_MESSAGE);
   }
 }
