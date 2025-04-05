@@ -14,21 +14,11 @@ export class SubcategoryDto {
   })
   name: string;
 
-  public constructor(subcategory?: Subcategory) {
+  constructor(subcategory?: Subcategory) {
     if (!subcategory) {
       return;
     }
     this.id = subcategory.id;
     this.name = subcategory.name;
-  }
-
-  public withId(id: number) {
-    this.id = id;
-    return this;
-  }
-
-  public withName(name: string) {
-    this.name = name;
-    return this;
   }
 }

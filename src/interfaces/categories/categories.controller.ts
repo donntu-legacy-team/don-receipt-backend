@@ -21,7 +21,7 @@ import {
   CATEGORIES_NOT_FOUND_MESSAGE,
   CATEGORY_ALREADY_EXISTS_MESSAGE,
   CATEGORY_DOES_NOT_EXIST_MESSAGE,
-  CATEGORY_SUCCESSFULLY_UPDATED,
+  CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/category.constants';
 
 @Controller('categories')
@@ -99,7 +99,7 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Обновить категорию' })
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({
-    description: CATEGORY_SUCCESSFULLY_UPDATED,
+    description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
     type: SuccessDto,
   })
   @ApiBadRequestResponse({
@@ -115,6 +115,6 @@ export class CategoriesController {
     if (!category) {
       return errorResponse(res, CATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponse(res, CATEGORY_SUCCESSFULLY_UPDATED);
+    return successResponse(res, CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE);
   }
 }
