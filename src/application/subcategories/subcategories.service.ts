@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { Repository } from 'typeorm';
+import { CreateSubcategoryParams } from '@/application/subcategories/subcategories.types';
 
 @Injectable()
 export class SubcategoriesService {
@@ -10,26 +11,20 @@ export class SubcategoriesService {
     private subcategoriesRepository: Repository<Subcategory>,
   ) {}
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findAll() {
-    const subcategories = await this.subcategoriesRepository.find();
-    return subcategories;
-  }
-
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findSubcategoryById(id: number) {
-    const subcategory = await this.subcategoriesRepository.findOneBy({
-      id: id,
+  async createSubcategory(createSubcategoryParams: CreateSubcategoryParams) {
+    const foundSubcategory = await this.subcategoriesRepository.findOneBy({
+      name: createSubcategoryParams.name,
     });
 
-    return subcategory;
-  }
+    if (foundSubcategory) {
+      return null;
+    }
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findSubcategoryByName(subcategoryName: string) {
-    const subcategory = await this.subcategoriesRepository.findOneBy({
-      name: subcategoryName,
+    const subcategory = this.subcategoriesRepository.create({
+      name: createSubcategoryParams.name,
+      parentCategory: createSubcategoryParams.parentCategory,
     });
+    await this.subcategoriesRepository.save(subcategory);
 
     return subcategory;
   }
