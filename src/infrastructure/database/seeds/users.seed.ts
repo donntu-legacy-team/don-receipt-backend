@@ -63,10 +63,7 @@ async function usersSeed(ds: DataSource) {
 
   for (const seed of userSeeds) {
     const existingUser = await userRepository.findOne({
-      where: [
-        { username: seed.username },
-        { email: seed.email },
-      ],
+      where: [{ username: seed.username }, { email: seed.email }],
     });
 
     if (existingUser) {
