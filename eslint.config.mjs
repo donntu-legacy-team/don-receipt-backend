@@ -4,6 +4,11 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+import { includeIgnoreFile } from '@eslint/compat';
+import { fileURLToPath } from "node:url";
+
+const gitignorePath = fileURLToPath(new URL(".gitignore", import.meta.url));
+
 export default tseslint.config(
   {
     ignores: ['eslint.config.mjs'],
@@ -32,4 +37,5 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'warn'
     },
   },
+  includeIgnoreFile(gitignorePath)
 );
