@@ -1,12 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { LoggingInterceptor } from '@/interfaces/logger/Interceptors/logger.interceptors';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 import { AppModule } from '@/infrastructure/modules/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
+  app
+    .useGlobalInterceptors(new LoggingInterceptor())
+    .enableCors({
     origin: ['http://localhost:3000', 'http://localhost:3002'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -33,4 +36,5 @@ async function bootstrap() {
   });
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();

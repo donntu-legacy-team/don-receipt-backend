@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '@/infrastructure/modules/users.module';
 import { CategoriesModule } from '@/infrastructure/modules/categories.module';
@@ -11,6 +11,7 @@ import { DEVELOPMENT_ENV_PATH } from '@/infrastructure/config/configuration';
 import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
+import { LoggerMiddleware } from '@/interfaces/logger/middleware/logger.middleware';
 import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
 
 @Module({
@@ -19,7 +20,9 @@ import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
     CategoriesModule,
     SubcategoriesModule,
     AuthModule,
-    ConfigModule.forRoot({ envFilePath: DEVELOPMENT_ENV_PATH }),
+    ConfigModule.forRoot({
+      envFilePath: DEVELOPMENT_ENV_PATH,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: config().database.host,
@@ -39,4 +42,8 @@ import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
