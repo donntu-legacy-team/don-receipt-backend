@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { ILogger } from '@/infrastructure/logger/logger.interface';
 import { Log4jsLogger } from '@/infrastructure/logger/logger';
@@ -17,12 +17,17 @@ export class LoggingInterceptor implements NestInterceptor {
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const body = context.switchToHttp().getResponse<Response>().body;
+    const request = context.switchToHttp().getRequest<Request>();
+    const response = context.switchToHttp().getResponse<Response>();
 
     return next.handle().pipe(
-      map(() => {
+      tap(() => {
         this.logger.info(`Response: `, {
-          body: body,
+          method: request.method,
+          url: request.url,
+          headers: response.headers,
+          status: response.status,
+          body: response.body,
         });
       }),
     );
