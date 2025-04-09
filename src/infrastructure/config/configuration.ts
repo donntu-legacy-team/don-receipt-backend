@@ -32,9 +32,7 @@ export const config = (): Configuration => {
     env: isDev ? 'dev' : 'prod',
     http: {
       host: process.env.HTTP_HOST ?? 'localhost',
-      port: process.env.HTTP_PORT
-        ? parseInt(process.env.HTTP_PORT, 10)
-        : 3000,
+      port: process.env.HTTP_PORT ? parseInt(process.env.HTTP_PORT, 10) : 3000,
     },
     database: {
       host: process.env.POSTGRES_HOST ?? 'localhost',

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { UsersModule } from '@/infrastructure/modules/users.module';
 import { CategoriesModule } from '@/infrastructure/modules/categories.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,7 @@ import { DEVELOPMENT_ENV_PATH } from '@/infrastructure/config/configuration';
 import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
+import { LoggerMiddleware } from '@/interfaces/logger/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -29,4 +30,8 @@ import { Subcategory } from '@/domain/subcategories/subcategory.entity';
     }),
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

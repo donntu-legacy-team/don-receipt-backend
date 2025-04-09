@@ -2,11 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@/infrastructure/modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-
+import { LoggingInterceptor } from '@/interfaces/logger/Interceptors/logger.interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app
+    .useGlobalPipes(new ValidationPipe())
+    .useGlobalInterceptors(new LoggingInterceptor());
   const config = new DocumentBuilder()
     .setTitle('DonReceipt api')
     .setVersion('1.0')
