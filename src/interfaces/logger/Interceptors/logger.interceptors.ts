@@ -9,6 +9,7 @@ import { tap } from 'rxjs/operators';
 import { ILogger } from '@/infrastructure/logger/logger.interface';
 import { Log4jsLogger } from '@/infrastructure/logger/logger';
 
+// Не обрабатывает пост-запросы
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private logger: ILogger;
