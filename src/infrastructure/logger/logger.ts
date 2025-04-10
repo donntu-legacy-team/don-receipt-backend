@@ -8,7 +8,7 @@ export class Log4jsLogger implements ILogger {
 
   constructor(category: string = 'default') {
     this.logger = getLogger(category);
-    this.logger.level = 'info';
+    this.logger.level = 'info'; // так не должно быть. Уровень логгировани определяется в конфигах
   }
 
   info(message: string, context?: any) {
