@@ -7,4 +7,3 @@ pre-commit:
 
     - name: typescript
       run: npm run typecheck
-      glob: "*.{js,ts,jsx,tsx}"
