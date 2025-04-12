@@ -8,10 +8,11 @@ import {
 import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
-import { successResponse, errorResponse } from '@/interfaces/common/response';
-import { CATEGORIES_NOT_FOUND_MESSAGE } from '@/interfaces/constants/category.constants';
+import {
+  successResponse,
+  errorResponseWithData,
+} from '@/interfaces/common/response';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
-import { ErrorDto } from '@/interfaces/common/error-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
 @Controller('categories')
@@ -21,8 +22,17 @@ export class CategoriesController {
   @Get()
   @ApiExtraModels(CategoryDto)
   @ApiNotFoundResponse({
-    description: CATEGORIES_NOT_FOUND_MESSAGE,
-    type: ErrorDto,
+    schema: {
+      properties: {
+        categories: {
+          type: 'array',
+          items: { $ref: getSchemaPath(CategoryDto) },
+        },
+      },
+    },
+    example: {
+      categories: [],
+    },
   })
   @ApiOkResponse({
     schema: {
@@ -41,7 +51,7 @@ export class CategoriesController {
     const categories = await this.categoriesService.findAll();
 
     if (!categories.length) {
-      return errorResponse(res, CATEGORIES_NOT_FOUND_MESSAGE);
+      return errorResponseWithData(res, { categories: [] });
     }
 
     const categoriesDto = categories.map((category) => {

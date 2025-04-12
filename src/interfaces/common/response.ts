@@ -15,3 +15,11 @@ export function errorResponse(
 ) {
   return res.status(statusCode).json({ message });
 }
+
+export function errorResponseWithData<T>(
+  res: Response,
+  data: T,
+  statusCode: number = 404,
+) {
+  return res.status(statusCode).json(data);
+}
