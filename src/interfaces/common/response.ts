@@ -16,11 +16,3 @@ export function errorResponse(
 ) {
   return res.status(statusCode).json({ message });
 }
-
-export function errorResponseWithData<T>(
-  res: Response,
-  data: T,
-  statusCode: number = HttpStatus.NOT_FOUND,
-) {
-  return res.status(statusCode).json(data);
-}
