@@ -10,6 +10,18 @@ export enum UserRole {
   ADMIN = 'ADMIN',
 }
 
+export type RolesWeights = {
+  [UserRole.USER]: number;
+  [UserRole.MODER]: number;
+  [UserRole.ADMIN]: number;
+};
+
+export const ROLES_WEIGHTS: RolesWeights = {
+  [UserRole.USER]: 1,
+  [UserRole.MODER]: 2,
+  [UserRole.ADMIN]: 3,
+};
+
 @Entity({ name: 'users' })
 export class User {
   @PrimaryGeneratedColumn()
