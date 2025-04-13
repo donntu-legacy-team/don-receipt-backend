@@ -33,10 +33,6 @@ export class CategoriesController {
   async getCategories(@Res() res: Response) {
     const categories = await this.categoriesService.findAll();
 
-    if (!categories.length) {
-      return successResponse(res, { categories: [] });
-    }
-
     const categoriesDto = categories.map((category) => {
       const categoryDto = new CategoryDto(category);
       categoryDto.subcategories = category.subcategories.map((subcategory) => {
