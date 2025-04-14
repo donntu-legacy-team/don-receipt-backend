@@ -7,7 +7,7 @@ import {
 import { Controller, Get, Inject, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
-import { successResponse } from '@/interfaces/common/response';
+import { successResponse } from '@/interfaces/common/helpers/response.helper';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 

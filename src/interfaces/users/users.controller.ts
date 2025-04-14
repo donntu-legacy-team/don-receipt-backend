@@ -1,4 +1,11 @@
-import { Controller, Get, Inject, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Query,
+  Res,
+  HttpStatus,
+} from '@nestjs/common';
 import { Response } from 'express';
 import {
   ApiExtraModels,
@@ -10,10 +17,7 @@ import {
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
-import {
-  successResponse,
-  errorResponse,
-} from '@/interfaces/common/helpers/response.helper';
+import { successResponse } from '@/interfaces/common/helpers/response.helper';
 import { USER_NOT_FOUND_MESSAGE } from '@/interfaces/constants/users-response-messages.constants';
 
 @Controller('users')
@@ -22,7 +26,7 @@ export class UsersController {
 
   @Get()
   @ApiOperation({ summary: 'Найти пользователя по id' })
-  @ApiExtraModels(UserDto)
+  @ApiExtraModels(UserDto, ErrorDto)
   @ApiNotFoundResponse({
     description: USER_NOT_FOUND_MESSAGE,
     type: ErrorDto,
@@ -38,7 +42,8 @@ export class UsersController {
   async getUserById(@Res() res: Response, @Query('id') id: number) {
     const user = await this.usersService.findUserById(id);
     if (!user) {
-      return errorResponse(res, USER_NOT_FOUND_MESSAGE);
+      const error: ErrorDto = { message: USER_NOT_FOUND_MESSAGE };
+      return res.status(HttpStatus.NOT_FOUND).json(error);
     }
     return successResponse(res, { user: new UserDto(user) });
   }

@@ -16,6 +16,7 @@ import { RefreshTokenDto } from '@/interfaces/auth/dto/refresh-token.dto';
 import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
+import { TokensPairDto } from '@/interfaces/auth/dto/tokens-pair.dto';
 import { Authorized, CurrentUser } from '@/interfaces/common/decorators';
 import {
   errorResponse,
@@ -29,7 +30,7 @@ import {
 
 @ApiTags('Авторизация')
 @Controller('auth')
-@ApiExtraModels(UserDto)
+@ApiExtraModels(UserDto, TokensPairDto, ErrorDto)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -37,14 +38,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Вход пользователя и получение токенов' })
   @ApiOkResponse({
     description: 'Возвращает accessToken и refreshToken',
-    schema: {
-      properties: {
-        accessToken: { type: 'string' },
-        refreshToken: { type: 'string' },
-      },
-    },
+    type: TokensPairDto,
   })
-  @ApiUnauthorizedResponse({ description: 'Неверные учетные данные' })
+  @ApiUnauthorizedResponse({
+    description: 'Неверные учетные данные',
+    type: ErrorDto,
+  })
   async login(@Res() res: Response, @Body() loginDto: LoginDto) {
     const loginData = await this.authService.login(
       loginDto.username,
@@ -59,24 +58,24 @@ export class AuthController {
       );
     }
 
-    return successResponse(res, {
+    const tokensPair: TokensPairDto = {
       accessToken: loginData.accessToken,
       refreshToken: loginData.refreshToken,
-    });
+    };
+
+    return successResponse(res, tokensPair);
   }
 
   @Post('refresh')
   @ApiOperation({ summary: 'Обновление токенов' })
   @ApiOkResponse({
     description: 'Возвращает новые accessToken и refreshToken',
-    schema: {
-      properties: {
-        accessToken: { type: 'string' },
-        refreshToken: { type: 'string' },
-      },
-    },
+    type: TokensPairDto,
   })
-  @ApiBadRequestResponse({ description: 'Неверный refresh токен' })
+  @ApiBadRequestResponse({
+    description: 'Неверный refresh токен',
+    type: ErrorDto,
+  })
   async refresh(
     @Res() res: Response,
     @Body() refreshTokenDto: RefreshTokenDto,
@@ -93,10 +92,12 @@ export class AuthController {
       );
     }
 
-    return successResponse(res, {
+    const tokensPair: TokensPairDto = {
       accessToken: refreshData.accessToken,
       refreshToken: refreshData.refreshToken,
-    });
+    };
+
+    return successResponse(res, tokensPair);
   }
 
   @Get('user')
@@ -109,7 +110,10 @@ export class AuthController {
       },
     },
   })
-  @ApiBadRequestResponse({ description: 'Неверный access токен' })
+  @ApiBadRequestResponse({
+    description: 'Неверный access токен',
+    type: ErrorDto,
+  })
   @Authorized()
   getCurrentUser(@Res() res: Response, @CurrentUser() user: User) {
     if (!user) {
