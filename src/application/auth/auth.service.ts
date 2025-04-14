@@ -71,7 +71,7 @@ export class AuthService {
     };
   }
 
-  async register(createUserDto: CreateUserDto): Promise<User | null> {
+  async register(createUserDto: CreateUserDto) {
     const user = await this.usersService.createUser(createUserDto);
     return user;
   }

@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Res,
-  Get,
-} from '@nestjs/common';
+import { Controller, Post, Body, Res, Get, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -19,7 +13,7 @@ import {
 import { AuthService } from '@/application/auth/auth.service';
 import { LoginDto } from '@/interfaces/auth/dto/login.dto';
 import { RefreshTokenDto } from '@/interfaces/auth/dto/refresh-token.dto';
-import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto'; // важно импортировать DTO для создания пользователя
+import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Authorized, CurrentUser } from '@/interfaces/common/decorators';
@@ -31,16 +25,25 @@ import { User } from '@/domain/users/user.entity';
 import {
   AUTH_INVALID_CREDENTIALS_MESSAGE,
   USER_ALREADY_EXISTS_MESSAGE,
-} from '@/interfaces/auth/auth-response-messages.constants';
+} from '@/interfaces/constants/auth-response-messages.constants';
 
 @ApiTags('Авторизация')
 @Controller('auth')
+@ApiExtraModels(UserDto)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Вход пользователя и получение токенов' })
-  @ApiOkResponse({ description: 'Возвращает accessToken и refreshToken' })
+  @ApiOkResponse({
+    description: 'Возвращает accessToken и refreshToken',
+    schema: {
+      properties: {
+        accessToken: { type: 'string' },
+        refreshToken: { type: 'string' },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({ description: 'Неверные учетные данные' })
   async login(@Res() res: Response, @Body() loginDto: LoginDto) {
     const loginData = await this.authService.login(
@@ -49,7 +52,11 @@ export class AuthController {
     );
 
     if (!loginData.user) {
-      return errorResponse(res, AUTH_INVALID_CREDENTIALS_MESSAGE, 401);
+      return errorResponse(
+        res,
+        AUTH_INVALID_CREDENTIALS_MESSAGE,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return successResponse(res, {
@@ -60,7 +67,15 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: 'Обновление токенов' })
-  @ApiOkResponse({ description: 'Возвращает новые accessToken и refreshToken' })
+  @ApiOkResponse({
+    description: 'Возвращает новые accessToken и refreshToken',
+    schema: {
+      properties: {
+        accessToken: { type: 'string' },
+        refreshToken: { type: 'string' },
+      },
+    },
+  })
   @ApiBadRequestResponse({ description: 'Неверный refresh токен' })
   async refresh(
     @Res() res: Response,
@@ -71,7 +86,11 @@ export class AuthController {
     );
 
     if (!refreshData.user) {
-      return errorResponse(res, AUTH_INVALID_CREDENTIALS_MESSAGE, 401);
+      return errorResponse(
+        res,
+        AUTH_INVALID_CREDENTIALS_MESSAGE,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return successResponse(res, {
@@ -84,7 +103,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Получить информацию о текущем пользователе' })
   @ApiOkResponse({
     description: 'Возвращает данные пользователя',
-    type: UserDto,
+    schema: {
+      properties: {
+        user: { $ref: getSchemaPath(UserDto) },
+      },
+    },
   })
   @ApiBadRequestResponse({ description: 'Неверный access токен' })
   @Authorized()
