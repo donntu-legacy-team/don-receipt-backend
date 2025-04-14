@@ -1,8 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserRole {
   USER = 'USER',
@@ -62,4 +58,3 @@ export class User {
   })
   updatedAt: Date;
 }
-
