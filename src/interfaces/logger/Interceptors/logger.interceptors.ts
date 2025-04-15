@@ -5,9 +5,16 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
+import { Request, Response } from 'express';
 import { ILogger } from '@/infrastructure/logger/logger.interface';
 import { Log4jsLogger } from '@/infrastructure/logger/logger';
+import { excludedHeaders } from '@/interfaces/constants/header.constant';
 
+interface ExtendedResponse extends Response {
+  _loggedResponse: boolean;
+}
+
+// добавить логгирование заголовков йоу
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private logger: ILogger;
@@ -17,39 +24,46 @@ export class LoggingInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const ctx = context.switchToHttp();
-    const req = ctx.getRequest();
-    const res = ctx.getResponse();
-    
-    const resAny = res as any;
-    resAny._loggedResponse = false;
+    const req = ctx.getRequest<Request>();
+    const res = ctx.getResponse<ExtendedResponse>();
+
+    res._loggedResponse = false;
+
+    const formattedHeaders = Object.entries(res.getHeaders())
+      .filter(([key]) => !excludedHeaders.has(key.toLowerCase()))
+      .map(([key, value]) => `${key}: ${value as any}`)
+      .join('\n');
 
     const originalJson = res.json.bind(res);
-    res.json = (body: any) => {
-      if (!resAny._loggedResponse) {
-        resAny._loggedResponse = true;
+    res.json = (body: unknown) => {
+      if (!res._loggedResponse) {
+        res._loggedResponse = true;
         this.logger.info('Response: ', {
           method: req.method,
+          header: formattedHeaders,
           url: req.url,
-          response: body, 
+          response: body,
         });
       }
       return originalJson(body);
     };
 
     const originalSend = res.send.bind(res);
-    res.send = (body: any) => {
-      if (!resAny._loggedResponse) {
-        resAny._loggedResponse = true;
+    res.send = (body: unknown) => {
+      if (!res._loggedResponse) {
+        res._loggedResponse = true;
         try {
-          const json = JSON.parse(body);
+          const json: unknown = JSON.parse(body as any);
           this.logger.info('Response: ', {
             method: req.method,
+            header: formattedHeaders,
             url: req.url,
             response: json,
           });
         } catch {
           this.logger.info('Response: ', {
             method: req.method,
+            header: formattedHeaders,
             url: req.url,
             response: body,
           });
