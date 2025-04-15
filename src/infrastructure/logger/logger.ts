@@ -11,10 +11,10 @@ export class Log4jsLogger implements ILogger {
     this.logger.level = 'info';
   }
 
-  private formatContext(context: any): string {
-    return typeof context === 'object'
+  private formatContext(context: unknown): string {
+    return context !== null && typeof context === 'object'
       ? JSON.stringify(context, null, 2)
-      : context;
+      : String(context);
   }
 
   info(message: string, context?: any) {
