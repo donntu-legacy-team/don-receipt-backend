@@ -3,7 +3,7 @@ pre-commit:
   jobs:
     - name: lint
       run: npm run lint
-      glob: "*.{js,ts,jsx,tsx}"
+      glob: '*.{js,ts,jsx,tsx}'
 
     - name: typescript
       run: npm run typecheck
