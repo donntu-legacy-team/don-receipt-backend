@@ -44,8 +44,8 @@ export const config = (): Configuration => {
       host: process.env.POSTGRES_HOST ?? 'localhost',
       port: process.env.POSTGRES_PORT
         ? parseInt(process.env.POSTGRES_PORT, 10)
-        : 5432,
-      username: process.env.POSTGRES_USERNAME ?? 'postgres',
+        : 5433,
+      username: process.env.POSTGRES_USERNAME ?? 'root',
       password: process.env.POSTGRES_PASSWORD ?? 'root',
       databaseName: process.env.POSTGRES_DATABASE ?? 'don_receipt',
       synchronize: isDev,
