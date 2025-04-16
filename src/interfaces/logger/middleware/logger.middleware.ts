@@ -13,7 +13,18 @@ export class LoggerMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl, headers, query } = req;
-    const body = req.body as unknown;
+    const body = req.body as Record<string, unknown>;
+
+    const sanitizedBody = { ...body };
+
+    if ('password' in sanitizedBody) {
+      const passwordValue = sanitizedBody.password;
+      if (typeof passwordValue === 'string') {
+        sanitizedBody.password = '*'.repeat(passwordValue.length);
+      } else {
+        sanitizedBody.password = '***';
+      }
+    }
 
     const formattedHeaders = Object.entries(headers)
       .filter(([key]) => !excludedHeaders.has(key.toLowerCase()))
@@ -25,7 +36,9 @@ export class LoggerMiddleware implements NestMiddleware {
       .join('\n');
 
     const formattedBody: any =
-      typeof body === 'object' ? JSON.stringify(body, null, 2) : body;
+      typeof sanitizedBody === 'object'
+        ? JSON.stringify(sanitizedBody, null, 2)
+        : sanitizedBody;
 
     const logMessage = `${method} ${originalUrl}
 Headers:
@@ -39,3 +52,7 @@ ${formattedBody}`;
     next();
   }
 }
+
+// if (formattedBody.hasOwnProperty('password')) {
+//   const { password, ...bodyNoPassword } = formattedBody;
+// }

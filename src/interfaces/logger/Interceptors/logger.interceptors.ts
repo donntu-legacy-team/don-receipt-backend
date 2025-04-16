@@ -53,7 +53,7 @@ export class LoggingInterceptor implements NestInterceptor {
       if (!res._loggedResponse) {
         res._loggedResponse = true;
         try {
-          const json: unknown = JSON.parse(body as any);
+          const json: unknown = JSON.parse(body as string);
           this.logger.info('Response: ', {
             method: req.method,
             header: formattedHeaders,

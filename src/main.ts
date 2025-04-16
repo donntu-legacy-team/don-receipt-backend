@@ -10,10 +10,10 @@ async function bootstrap() {
   app
     .useGlobalInterceptors(new LoggingInterceptor())
     .enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+      origin: ['http://localhost:3000', 'http://localhost:3002'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
   app.useGlobalPipes(new ValidationPipe());
   const swaggerConfig = new DocumentBuilder()
     .setTitle('DonReceipt API')
