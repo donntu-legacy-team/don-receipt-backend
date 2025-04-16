@@ -12,7 +12,10 @@ import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Response } from 'express';
 import { CreateSubcategoryDto } from '@/interfaces/subcategories/dto/create-subcategory.dto';
-import { errorResponse, successResponse } from '@/interfaces/common/response';
+import {
+  errorResponse,
+  successResponse,
+} from '@/interfaces/common/helpers/response.helper';
 import {
   CATEGORY_DOES_NOT_EXIST_MESSAGE,
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
