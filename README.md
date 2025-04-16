@@ -3,15 +3,19 @@
 ## Настройка проекта для тестовой среды
 
 ### Установка зависимостей
+
 ```bash
 $ npm install
 ```
+
 ### Настройки окружения
+
 > Обратите внимание на переменные окружения в `docker-compose.yml`. Переменные окружения для базы данных должны соответствовать тем, что находятся у вас в `.env.development`.
 
 > `POSTGRES_HOST: "postgres"` в `docker-compose.yml` не соответствует с `POSTGRES_HOST` в переменных окружения backend-сервиса. **Это требуется для запуска базы данных в `docker-compose`**.
 
 `.env.development`
+
 ```dotenv
 ENVIRONMENT=dev
 HTTP_HOST=localhost
