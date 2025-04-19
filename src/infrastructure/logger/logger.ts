@@ -1,17 +1,24 @@
 import { getLogger, Logger } from 'log4js';
-import { ILogger } from '@/infrastructure/logger/logger.interface';
 import { Injectable } from '@nestjs/common';
+
+export interface ILogger {
+  info(message: string, context?: any): void;
+  error(message: string, context?: any): void;
+  debug(message: string, context?: any): void;
+  warn(message: string, context?: any): void;
+  trace(message: string, context?: any): void;
+}
 
 @Injectable()
 export class Log4jsLogger implements ILogger {
   private readonly logger: Logger;
 
-  constructor(category: string = 'default') {
-    this.logger = getLogger(category);
-    this.logger.level = 'info';
+  constructor(level: string = 'info') {
+    this.logger = getLogger();
+    this.logger.level = level;
   }
 
-  private formatContext(context: unknown): string {
+  private formatContext(context: unknown) {
     return context !== null && typeof context === 'object'
       ? JSON.stringify(context, null, 2)
       : String(context);

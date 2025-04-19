@@ -1,73 +1,47 @@
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
 import { Request, Response } from 'express';
-import { ILogger } from '@/infrastructure/logger/logger.interface';
-import { Log4jsLogger } from '@/infrastructure/logger/logger';
-import { excludedHeaders } from '@/interfaces/constants/header.constant';
+import { ILogger, Log4jsLogger } from '@/infrastructure/logger';
+import { config } from '@/infrastructure/config';
+import { formatResponseLog } from '@/infrastructure/utils/log-formatter';
 
-interface ExtendedResponse extends Response {
-  _loggedResponse: boolean;
-}
-
-// добавить логгирование заголовков йоу
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private logger: ILogger;
   constructor() {
-    this.logger = new Log4jsLogger();
+    this.logger = new Log4jsLogger('debug');
   }
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler) {
     const ctx = context.switchToHttp();
     const req = ctx.getRequest<Request>();
-    const res = ctx.getResponse<ExtendedResponse>();
-
-    res._loggedResponse = false;
+    const res = ctx.getResponse<Response>();
 
     const formattedHeaders = Object.entries(res.getHeaders())
-      .filter(([key]) => !excludedHeaders.has(key.toLowerCase()))
+      .filter(
+        ([key]) => !config().logging.excludedHeaders.has(key.toLowerCase()),
+      )
       .map(([key, value]) => `${key}: ${value as any}`)
       .join('\n');
 
-    const originalJson = res.json.bind(res);
-    res.json = (body: unknown) => {
-      if (!res._loggedResponse) {
-        res._loggedResponse = true;
-        this.logger.info('Response: ', {
-          method: req.method,
-          header: formattedHeaders,
-          url: req.url,
-          response: body,
-        });
-      }
-      return originalJson(body);
-    };
-
+    // Не знаю, как сделать иначе. Другими способами, без переопределения send у меня не получалось логгировать тело запроса. Это способ Тараса и он рабоает
     const originalSend = res.send.bind(res);
     res.send = (body: unknown) => {
-      if (!res._loggedResponse) {
-        res._loggedResponse = true;
-        try {
-          const json: unknown = JSON.parse(body as string);
-          this.logger.info('Response: ', {
-            method: req.method,
-            header: formattedHeaders,
-            url: req.url,
-            response: json,
-          });
-        } catch {
-          this.logger.info('Response: ', {
-            method: req.method,
-            header: formattedHeaders,
-            url: req.url,
-            response: body,
-          });
-        }
+      try {
+        const json: unknown = JSON.parse(body as string);
+        this.logger.info(
+          'Response: ',
+          formatResponseLog(req, formattedHeaders, json),
+        );
+      } catch {
+        this.logger.info(
+          'Response: ',
+          formatResponseLog(req, formattedHeaders, body),
+        );
       }
       return originalSend(body);
     };

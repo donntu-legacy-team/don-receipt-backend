@@ -8,13 +8,13 @@ import { AppModule } from '@/infrastructure/modules/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app
+    .useGlobalPipes(new ValidationPipe())
     .useGlobalInterceptors(new LoggingInterceptor())
     .enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3002'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     });
-  app.useGlobalPipes(new ValidationPipe());
   const swaggerConfig = new DocumentBuilder()
     .setTitle('DonReceipt API')
     .setVersion('1.0')
