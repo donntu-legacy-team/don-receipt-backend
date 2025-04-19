@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { Log4jsLogger } from '@/infrastructure/logger/logger';
-import { excludedHeaders } from '@/interfaces/constants/header.constant';
+import { Log4jsLogger } from '@/infrastructure/logger';
+import { config } from '@/infrastructure/config';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
@@ -18,41 +18,37 @@ export class LoggerMiddleware implements NestMiddleware {
     const sanitizedBody = { ...body };
 
     if ('password' in sanitizedBody) {
-      const passwordValue = sanitizedBody.password;
-      if (typeof passwordValue === 'string') {
-        sanitizedBody.password = '*'.repeat(passwordValue.length);
-      } else {
-        sanitizedBody.password = '***';
-      }
+      sanitizedBody.password = '***';
     }
 
     const formattedHeaders = Object.entries(headers)
-      .filter(([key]) => !excludedHeaders.has(key.toLowerCase()))
+      .filter(
+        ([key]) => !config().logging.excludedHeaders.has(key.toLowerCase()),
+      )
       .map(([key, value]) => `${key}: ${value as any}`)
       .join('\n');
 
-    const formattedParams = Object.entries(query)
-      .map(([key, value]) => `${key}: ${value as any}`)
-      .join('\n');
+    const logSections = [
+      `${method} ${originalUrl}`,
+      `Headers:\n${formattedHeaders}`,
+    ];
+
+    if (Object.keys(query).length > 0) {
+      const formattedParams = Object.entries(query)
+        .map(([key, value]) => `${key}: ${value as any}`)
+        .join('\n');
+      logSections.push(`Params:\n${formattedParams}`);
+    }
 
     const formattedBody: any =
       typeof sanitizedBody === 'object'
         ? JSON.stringify(sanitizedBody, null, 2)
         : sanitizedBody;
+    logSections.push(`Body:\n${formattedBody}`);
 
-    const logMessage = `${method} ${originalUrl}
-Headers:
-${formattedHeaders}
-Params:
-${formattedParams}
-body:
-${formattedBody}`;
+    const logMessage = logSections.join('\n').trim();
 
     this.logger.info(logMessage);
     next();
   }
 }
-
-// if (formattedBody.hasOwnProperty('password')) {
-//   const { password, ...bodyNoPassword } = formattedBody;
-// }
