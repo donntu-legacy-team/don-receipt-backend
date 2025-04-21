@@ -1,20 +1,18 @@
 import {
   CallHandler,
   ExecutionContext,
+  Inject,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ILogger, Log4jsLogger } from '@/infrastructure/logger';
+import { ILogger } from '@/infrastructure/logger';
 import { config } from '@/infrastructure/config';
 import { formatResponseLog } from '@/infrastructure/utils/log-formatter';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
-  private logger: ILogger;
-  constructor() {
-    this.logger = new Log4jsLogger('debug');
-  }
+  constructor(@Inject('ILogger') private readonly logger: ILogger) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const ctx = context.switchToHttp();

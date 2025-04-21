@@ -12,6 +12,7 @@ import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { LoggerMiddleware } from '@/interfaces/logger/middleware/logger.middleware';
+import { LoggerModule } from '@/infrastructure/modules/logger.module';
 import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
 
 @Module({
@@ -20,6 +21,7 @@ import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
     CategoriesModule,
     SubcategoriesModule,
     AuthModule,
+    LoggerModule.forRoot('debug'),
     ConfigModule.forRoot({
       envFilePath: DEVELOPMENT_ENV_PATH,
     }),

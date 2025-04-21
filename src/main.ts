@@ -7,9 +7,11 @@ import { AppModule } from '@/infrastructure/modules/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const loggingInterceptor = app.get(LoggingInterceptor);
+
   app
     .useGlobalPipes(new ValidationPipe())
-    .useGlobalInterceptors(new LoggingInterceptor())
+    .useGlobalInterceptors(loggingInterceptor)
     .enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3002'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
