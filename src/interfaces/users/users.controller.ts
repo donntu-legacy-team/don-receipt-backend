@@ -1,12 +1,11 @@
-import { Controller, Get, Param, Res, HttpStatus } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Param, Res, Req, HttpStatus } from '@nestjs/common';
+import { Request, Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
-  ApiParam,
   ApiExtraModels,
   getSchemaPath,
   ApiBearerAuth,
@@ -15,12 +14,13 @@ import {
 
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
+import { UserIdParamDto } from '@/interfaces/users/dto/user-id-param.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import {
   errorResponse,
   successResponse,
 } from '@/interfaces/common/helpers/response.helper';
-import { Authorized, CurrentUser } from '@/interfaces/common/decorators';
+import { Authorized } from '@/interfaces/common/decorators';
 import { User, UserRole } from '@/domain/users/user.entity';
 import { AUTH_INVALID_CREDENTIALS_MESSAGE } from '@/interfaces/constants/auth-response-messages.constants';
 import { USER_NOT_FOUND_MESSAGE } from '@/interfaces/constants/users-response-messages.constants';
@@ -47,7 +47,8 @@ export class UsersController {
     description: 'Неверный access токен',
     type: ErrorDto,
   })
-  getCurrentUser(@Res() res: Response, @CurrentUser() user: User | null) {
+  getCurrentUser(@Res() res: Response, @Req() req: Request) {
+    const user = req.user as User | undefined;
     if (!user) {
       return errorResponse(
         res,
@@ -57,16 +58,11 @@ export class UsersController {
     }
     return successResponse(res, { user: new UserDto(user) });
   }
-  // TODO: убрать, временный эндпоинт для демонстрации работы декоратора
+
+  //TODO: З
   @Get(':id')
   @Authorized(UserRole.ADMIN)
   @ApiOperation({ summary: 'Получить пользователя по id (admin only)' })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    required: true,
-    description: 'ID пользователя',
-  })
   @ApiOkResponse({
     description: 'Данные пользователя',
     schema: {
@@ -83,10 +79,10 @@ export class UsersController {
     description: 'Недостаточно прав',
     type: ErrorDto,
   })
-  async getUserById(@Res() res: Response, @Param('id') id: number) {
-    const user = await this.usersService.findUserById(id);
+  async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {
+    const user = await this.usersService.findUserById(params.id);
     if (!user) {
-      return errorResponse(res, USER_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND);
+      return errorResponse(res, USER_NOT_FOUND_MESSAGE);
     }
     return successResponse(res, { user: new UserDto(user) });
   }

@@ -16,16 +16,18 @@ export class JwtAuthGuard extends PassportAuthGuard('jwt') {
     super();
   }
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  async canActivate(context: ExecutionContext) {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) return true;
+    if (isPublic) {
+      return true;
+    }
 
-    const can = (await super.canActivate(context)) as boolean;
+    const can = await super.canActivate(context);
     if (!can) {
-      throw new UnauthorizedException('Invalid or missing JWT token');
+      throw new UnauthorizedException('JWT токен не валиден или отсутствует');
     }
     return true;
   }
