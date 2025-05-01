@@ -59,7 +59,7 @@ export class UsersController {
     return successResponse(res, { user: new UserDto(user) });
   }
 
-  //TODO: З
+  // TODO: убрать, временный эндпоинт для демонстрации работы декоратора
   @Get(':id')
   @Authorized(UserRole.ADMIN)
   @ApiOperation({ summary: 'Получить пользователя по id (admin only)' })
