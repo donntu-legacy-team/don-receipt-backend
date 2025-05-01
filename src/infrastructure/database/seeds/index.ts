@@ -6,7 +6,7 @@ import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { seedUsers } from '@/infrastructure/database/seeds/users.seed';
 import { seedCategories } from '@/infrastructure/database/seeds/categories.seed';
 
-async function seedDatabase() {
+async function seedDatabase(wantToDrop: string) {
   const options: DataSourceOptions = {
     type: 'postgres',
     host: config().database.host,
@@ -21,7 +21,17 @@ async function seedDatabase() {
 
   try {
     await dataSource.initialize();
-    console.log('Data source initialized.');
+    console.log('Connected to the database.');
+
+    if (wantToDrop) {
+      console.log('Database will be dropped...');
+      const entities = dataSource.entityMetadatas;
+      for (const entity of entities) {
+        const repository = dataSource.getRepository(entity.name);
+        await repository.delete({});
+      }
+      console.log('Database successfully dropped...');
+    }
 
     await seedUsers(dataSource);
 
@@ -30,12 +40,12 @@ async function seedDatabase() {
     console.error('Error during seeding:', error);
   } finally {
     await dataSource.destroy();
-    console.log('Data source closed.');
+    console.log('Database connection closed.');
   }
 }
 
-// TODO(audworth): Добавить адекватное логгирование
-seedDatabase()
+const willBeDropped = process.argv[2];
+seedDatabase(willBeDropped)
   .then(() => {
     console.log('Seeding database is finished.');
   })
