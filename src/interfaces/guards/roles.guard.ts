@@ -1,41 +1,46 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  UnauthorizedException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
-import { UserRole, User } from '@/domain/users/user.entity';
-import { ROLES_KEY } from '@/interfaces/common/decorators/roles.decorator';
 
-interface RequestWithUser extends Request {
-  user?: User;
-}
+import { ROLES_KEY } from '@/interfaces/common/decorators/roles.decorator';
+import { UserRole, ROLES_WEIGHTS } from '@/domain/users/user.entity';
+
+import { AuthRequest } from '@/interfaces/common/request-with-auth';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.get<UserRole[]>(
-      ROLES_KEY,
-      context.getHandler(),
-    );
+  canActivate(context: ExecutionContext) {
+    const requiredRoles =
+      this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) ?? [];
+
     if (!requiredRoles) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const request = context.switchToHttp().getRequest<AuthRequest>();
     const user = request.user;
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new ForbiddenException('Пользователь не авторизован.');
     }
 
-    if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException('Access denied');
+    const userWeight = ROLES_WEIGHTS[user.role];
+
+    const pass = requiredRoles.some(
+      (role) => userWeight >= ROLES_WEIGHTS[role],
+    );
+
+    if (!pass) {
+      throw new ForbiddenException('Недостаточно прав');
     }
     return true;
   }
