@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Get, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Res, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -17,12 +17,11 @@ import { CreateUserDto } from '@/interfaces/users/dto/create-user.dto';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { TokensPairDto } from '@/interfaces/auth/dto/tokens-pair.dto';
-import { Authorized, CurrentUser } from '@/interfaces/common/decorators';
+import { Public } from '@/interfaces/common/decorators';
 import {
   errorResponse,
   successResponse,
 } from '@/interfaces/common/helpers/response.helper';
-import { User } from '@/domain/users/user.entity';
 import {
   AUTH_INVALID_CREDENTIALS_MESSAGE,
   USER_ALREADY_EXISTS_MESSAGE,
@@ -34,6 +33,7 @@ import {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @ApiOperation({ summary: 'Вход пользователя и получение токенов' })
   @ApiOkResponse({
@@ -72,7 +72,7 @@ export class AuthController {
     description: 'Возвращает новые accessToken и refreshToken',
     type: TokensPairDto,
   })
-  @ApiBadRequestResponse({
+  @ApiUnauthorizedResponse({
     description: 'Неверный refresh токен',
     type: ErrorDto,
   })
@@ -100,33 +100,11 @@ export class AuthController {
     return successResponse(res, tokensPair);
   }
 
-  @Get('user')
-  @ApiOperation({ summary: 'Получить информацию о текущем пользователе' })
-  @ApiOkResponse({
-    description: 'Возвращает данные пользователя',
-    schema: {
-      properties: {
-        user: { $ref: getSchemaPath(UserDto) },
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: 'Неверный access токен',
-    type: ErrorDto,
-  })
-  @Authorized()
-  getCurrentUser(@Res() res: Response, @CurrentUser() user: User) {
-    if (!user) {
-      return errorResponse(res, AUTH_INVALID_CREDENTIALS_MESSAGE);
-    }
-
-    return successResponse(res, { user: new UserDto(user) });
-  }
-
+  @Public()
   @Post('register')
   @ApiOperation({ summary: 'Регистрация пользователя' })
   @ApiOkResponse({
-    description: 'User created successfully',
+    description: 'Пользователь зарегистрирован успешно',
     schema: {
       properties: {
         user: { $ref: getSchemaPath(UserDto) },
