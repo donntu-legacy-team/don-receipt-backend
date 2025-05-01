@@ -1,1 +1,1 @@
-export const USER_NOT_FOUND_MESSAGE = 'User not found';
+export const USER_NOT_FOUND_MESSAGE = 'Пользователь не найден';
