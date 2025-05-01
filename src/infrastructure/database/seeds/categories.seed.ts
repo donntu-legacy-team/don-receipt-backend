@@ -1,12 +1,4 @@
-import 'reflect-metadata';
-import {
-  Seeder,
-  SeederFactoryManager,
-  setSeederFactory,
-} from 'typeorm-extension';
-import { config } from '@/infrastructure/config/configuration';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { runSeeders, SeederOptions } from 'typeorm-extension';
+import { DataSource } from 'typeorm';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
@@ -15,7 +7,7 @@ type CategorySeed = {
   subcategories: string[];
 };
 
-const seedCategories: CategorySeed[] = [
+const categoriesSeed: CategorySeed[] = [
   {
     name: 'Супы',
     subcategories: [
@@ -106,61 +98,41 @@ const seedCategories: CategorySeed[] = [
   },
 ];
 
-class CategoriesSeeder implements Seeder {
-  public async run(
-    dataSource: DataSource,
-    factoryManager: SeederFactoryManager,
-  ) {
-    const categoryFactory = factoryManager.get(Category);
+export async function seedCategories(ds: DataSource) {
+  console.log('Starting seeding categories...');
 
-    for (let i = seedCategories.length; i > 0; i--) {
-      const category = await categoryFactory.make();
-      await dataSource.getRepository(Category).save(category);
-      await dataSource.getRepository(Subcategory).save(category.subcategories);
-      seedCategories.pop();
+  const categoriesRepository = ds.getRepository(Category);
+  const subcategoriesRepository = ds.getRepository(Subcategory);
+
+  for (const seed of categoriesSeed) {
+    const existingCategory = await categoriesRepository.findOneBy({
+      name: seed.name,
+    });
+
+    if (existingCategory) {
+      console.log(`Category "${seed.name}" already exists. Skipping...`);
+      continue;
     }
+
+    const category = categoriesRepository.create({
+      name: seed.name,
+    });
+    await categoriesRepository.save(category);
+
+    const subcategories = seed.subcategories.map((subcategoryName) => {
+      const subcategory = subcategoriesRepository.create({
+        name: subcategoryName,
+        parentCategory: category,
+      });
+      return subcategory;
+    });
+
+    category.subcategories = subcategories;
+
+    await categoriesRepository.save(category);
+    await subcategoriesRepository.save(category.subcategories);
+    console.log(`Category "${category.name}" created.`);
   }
+
+  console.log('Finished seeding categories.');
 }
-
-const CategoriesFactory = setSeederFactory(Category, (faker): Category => {
-  const categorySeed = seedCategories.at(-1);
-  if (!categorySeed) {
-    throw new Error(
-      'Произошла ошибка при получении сида из заранее заготовленных данных',
-    );
-  }
-
-  const category = new Category();
-  category.id = faker.number.int({ min: 1, max: 20000 });
-  category.name = categorySeed.name;
-  category.subcategories = categorySeed.subcategories.map((subcategoryName) => {
-    const subcategory = new Subcategory();
-    subcategory.id = faker.number.int({ min: 1, max: 50000 });
-    subcategory.name = subcategoryName;
-    subcategory.parentCategory = category;
-    return subcategory;
-  });
-
-  return category;
-});
-
-const options: DataSourceOptions & SeederOptions = {
-  type: 'postgres',
-  host: config().database.host,
-  port: config().database.port,
-  username: config().database.username,
-  password: config().database.password,
-  database: config().database.databaseName,
-  synchronize: config().database.synchronize,
-  migrationsTransactionMode: 'each',
-  entities: [Category, Subcategory],
-  factories: [CategoriesFactory],
-  seeds: [CategoriesSeeder],
-};
-
-(async () => {
-  const dataSource = new DataSource(options);
-  await dataSource.initialize();
-  await dataSource.synchronize(true);
-  await runSeeders(dataSource);
-})();

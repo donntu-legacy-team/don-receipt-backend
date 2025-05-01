@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { config } from '@/infrastructure/config/configuration';
 import { User, UserRole } from '@/domain/users/user.entity';
 import * as bcrypt from 'bcryptjs';
@@ -43,21 +43,8 @@ const userSeeds: UserSeed[] = [
   },
 ];
 
-const options: DataSourceOptions = {
-  type: 'postgres',
-  host: config().database.host,
-  port: config().database.port,
-  username: config().database.username,
-  password: config().database.password,
-  database: config().database.databaseName,
-  entities: [User],
-  synchronize: config().database.synchronize,
-};
-
-const dataSource = new DataSource(options);
-
-async function usersSeed(ds: DataSource) {
-  console.log('Starting user seeding...');
+export async function seedUsers(ds: DataSource) {
+  console.log('Starting seeding users...');
 
   const userRepository = ds.getRepository(User);
 
@@ -86,19 +73,5 @@ async function usersSeed(ds: DataSource) {
     console.log(`User "${seed.username}" created.`);
   }
 
-  console.log('User seeding finished.');
+  console.log('Finished seeding users.');
 }
-
-(async () => {
-  try {
-    await dataSource.initialize();
-    console.log('Data source initialized.');
-
-    await usersSeed(dataSource);
-  } catch (error) {
-    console.error('Error during seeding users:', error);
-  } finally {
-    await dataSource.destroy();
-    console.log('Data source closed.');
-  }
-})();
