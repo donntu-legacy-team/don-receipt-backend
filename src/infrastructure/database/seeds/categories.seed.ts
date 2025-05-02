@@ -7,7 +7,7 @@ type CategorySeed = {
   subcategories: string[];
 };
 
-const categoriesSeed: CategorySeed[] = [
+const categoriesSeeds: CategorySeed[] = [
   {
     name: 'Супы',
     subcategories: [
@@ -98,13 +98,13 @@ const categoriesSeed: CategorySeed[] = [
   },
 ];
 
-export async function seedCategories(ds: DataSource) {
+export async function seedCategories(dataSource: DataSource) {
   console.log('Starting seeding categories...');
 
-  const categoriesRepository = ds.getRepository(Category);
-  const subcategoriesRepository = ds.getRepository(Subcategory);
+  const categoriesRepository = dataSource.getRepository(Category);
+  const subcategoriesRepository = dataSource.getRepository(Subcategory);
 
-  for (const seed of categoriesSeed) {
+  for (const seed of categoriesSeeds) {
     const existingCategory = await categoriesRepository.findOneBy({
       name: seed.name,
     });

@@ -43,10 +43,10 @@ const userSeeds: UserSeed[] = [
   },
 ];
 
-export async function seedUsers(ds: DataSource) {
+export async function seedUsers(dataSource: DataSource) {
   console.log('Starting seeding users...');
 
-  const userRepository = ds.getRepository(User);
+  const userRepository = dataSource.getRepository(User);
 
   for (const seed of userSeeds) {
     const existingUser = await userRepository.findOne({
