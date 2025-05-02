@@ -6,9 +6,7 @@ export class Subcategory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({
-    unique: true,
-  })
+  @Column({ unique: true })
   name: string;
 
   @ManyToOne(() => Category, (category) => category.subcategories)

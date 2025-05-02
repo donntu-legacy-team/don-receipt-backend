@@ -1,12 +1,4 @@
-import 'reflect-metadata';
-import {
-  Seeder,
-  SeederFactoryManager,
-  setSeederFactory,
-} from 'typeorm-extension';
-import { config } from '@/infrastructure/config/configuration';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { runSeeders, SeederOptions } from 'typeorm-extension';
+import { DataSource, In } from 'typeorm';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
@@ -15,7 +7,7 @@ type CategorySeed = {
   subcategories: string[];
 };
 
-const seedCategories: CategorySeed[] = [
+const categoriesSeeds: CategorySeed[] = [
   {
     name: 'Супы',
     subcategories: [
@@ -106,61 +98,82 @@ const seedCategories: CategorySeed[] = [
   },
 ];
 
-class CategoriesSeeder implements Seeder {
-  public async run(
-    dataSource: DataSource,
-    factoryManager: SeederFactoryManager,
-  ) {
-    const categoryFactory = factoryManager.get(Category);
+export async function seedCategories(
+  ds: DataSource,
+  skipChecks: boolean = false,
+) {
+  console.log(`Seeding categories (skipChecks=${skipChecks})…`);
 
-    for (let i = seedCategories.length; i > 0; i--) {
-      const category = await categoryFactory.make();
-      await dataSource.getRepository(Category).save(category);
-      await dataSource.getRepository(Subcategory).save(category.subcategories);
-      seedCategories.pop();
-    }
+  const catRepo = ds.getRepository(Category);
+  const subRepo = ds.getRepository(Subcategory);
+
+  if (skipChecks) {
+    await catRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Category)
+      .values(categoriesSeeds.map((s) => ({ name: s.name })))
+      .execute();
+    console.log('  → All categories inserted without checks.');
+  } else {
+    await catRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Category)
+      .values(categoriesSeeds.map((s) => ({ name: s.name })))
+      .onConflict(`("name") DO NOTHING`)
+      .execute();
+    console.log('  → Bulk upsert categories complete.');
   }
-}
 
-const CategoriesFactory = setSeederFactory(Category, (faker): Category => {
-  const categorySeed = seedCategories.at(-1);
-  if (!categorySeed) {
-    throw new Error(
-      'Произошла ошибка при получении сида из заранее заготовленных данных',
+  const allNames = categoriesSeeds.map((s) => s.name);
+  const cats = await catRepo.find({ where: { name: In(allNames) } });
+  const idMap = new Map(cats.map((c) => [c.name, c.id]));
+
+  const subRows = categoriesSeeds.flatMap((seed) =>
+    seed.subcategories.map((name) => ({
+      name,
+      parentCategory: { id: idMap.get(seed.name)! },
+    })),
+  );
+
+  if (skipChecks) {
+    await subRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Subcategory)
+      .values(subRows)
+      .execute();
+    console.log('  → All subcategories inserted without checks.');
+  } else {
+    const parentIds = Array.from(idMap.values());
+    const existing = await subRepo
+      .createQueryBuilder('sub')
+      .select([
+        'sub.name AS name',
+        'sub."parentCategoryId" AS "parentCategoryId"',
+      ])
+      .where('sub."parentCategoryId" IN (:...ids)', { ids: parentIds })
+      .getRawMany<{ name: string; parentCategoryId: number }>();
+
+    const existsSet = new Set(
+      existing.map((e) => `${e.name}-${e.parentCategoryId}`),
     );
+    const toInsert = subRows.filter((r) => {
+      const pid = (r.parentCategory as { id: number }).id;
+      return !existsSet.has(`${r.name}-${pid}`);
+    });
+
+    if (toInsert.length > 0) {
+      await subRepo
+        .createQueryBuilder()
+        .insert()
+        .into(Subcategory)
+        .values(toInsert)
+        .execute();
+    }
+    console.log('  → Bulk upsert subcategories complete.');
   }
 
-  const category = new Category();
-  category.id = faker.number.int({ min: 1, max: 20000 });
-  category.name = categorySeed.name;
-  category.subcategories = categorySeed.subcategories.map((subcategoryName) => {
-    const subcategory = new Subcategory();
-    subcategory.id = faker.number.int({ min: 1, max: 50000 });
-    subcategory.name = subcategoryName;
-    subcategory.parentCategory = category;
-    return subcategory;
-  });
-
-  return category;
-});
-
-const options: DataSourceOptions & SeederOptions = {
-  type: 'postgres',
-  host: config().database.host,
-  port: config().database.port,
-  username: config().database.username,
-  password: config().database.password,
-  database: config().database.databaseName,
-  synchronize: config().database.synchronize,
-  migrationsTransactionMode: 'each',
-  entities: [Category, Subcategory],
-  factories: [CategoriesFactory],
-  seeds: [CategoriesSeeder],
-};
-
-(async () => {
-  const dataSource = new DataSource(options);
-  await dataSource.initialize();
-  await dataSource.synchronize(true);
-  await runSeeders(dataSource);
-})();
+  console.log('Finished seeding categories.');
+}

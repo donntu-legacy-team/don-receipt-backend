@@ -10,11 +10,13 @@ import { Response } from 'express';
 import { successResponse } from '@/interfaces/common/helpers/response.helper';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
+import { Public } from '@/interfaces/common/decorators';
 
 @Controller('categories')
 export class CategoriesController {
   constructor(@Inject() private categoriesService: CategoriesService) {}
 
+  @Public()
   @Get()
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({

@@ -1,4 +1,4 @@
-import { DataSource, DataSourceOptions } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { config } from '@/infrastructure/config/configuration';
 import { User, UserRole } from '@/domain/users/user.entity';
 import * as bcrypt from 'bcryptjs';
@@ -30,9 +30,9 @@ const userSeeds: UserSeed[] = [
     role: UserRole.USER,
   },
   {
-    username: 'smirnova_ekaterina',
-    email: 'smirnova.ekaterina@example.ru',
-    password: 'S3cur3Katya!',
+    username: 'smirnova_ekaterина',
+    email: 'smirnova.екaterина@example.ru',
+    password: 'S3cur3Катя!',
     role: UserRole.USER,
   },
   {
@@ -43,62 +43,34 @@ const userSeeds: UserSeed[] = [
   },
 ];
 
-const options: DataSourceOptions = {
-  type: 'postgres',
-  host: config().database.host,
-  port: config().database.port,
-  username: config().database.username,
-  password: config().database.password,
-  database: config().database.databaseName,
-  entities: [User],
-  synchronize: config().database.synchronize,
-};
+export async function seedUsers(ds: DataSource, skipChecks: boolean = false) {
+  console.log(`Seeding users (skipChecks=${skipChecks})…`);
 
-const dataSource = new DataSource(options);
+  const repo = ds.getRepository(User);
+  const saltRounds = config().security.bcryptSaltRounds;
 
-async function usersSeed(ds: DataSource) {
-  console.log('Starting user seeding...');
-
-  const userRepository = ds.getRepository(User);
-
-  for (const seed of userSeeds) {
-    const existingUser = await userRepository.findOne({
-      where: [{ username: seed.username }, { email: seed.email }],
-    });
-
-    if (existingUser) {
-      console.log(`User "${seed.username}" already exists. Skipping...`);
-      continue;
-    }
-
-    const saltRounds = config().security.bcryptSaltRounds;
-    const hashedPassword = await bcrypt.hash(seed.password, saltRounds);
-
-    const user = userRepository.create({
-      username: seed.username,
-      email: seed.email,
-      passwordHash: hashedPassword,
-      role: seed.role,
+  const users = await Promise.all(
+    userSeeds.map(async ({ username, email, password, role }) => ({
+      username,
+      email,
+      passwordHash: await bcrypt.hash(password, saltRounds),
+      role,
       emailConfirmed: false,
-    });
+    })),
+  );
 
-    await userRepository.save(user);
-    console.log(`User "${seed.username}" created.`);
+  if (skipChecks) {
+    await repo.createQueryBuilder().insert().into(User).values(users).execute();
+    console.log('  → All users inserted without checks.');
+    return;
+  } else {
+    await repo
+      .createQueryBuilder()
+      .insert()
+      .into(User)
+      .values(users)
+      .onConflict(`("username") DO NOTHING`)
+      .execute();
+    console.log('  → Bulk upsert users complete.');
   }
-
-  console.log('User seeding finished.');
 }
-
-(async () => {
-  try {
-    await dataSource.initialize();
-    console.log('Data source initialized.');
-
-    await usersSeed(dataSource);
-  } catch (error) {
-    console.error('Error during seeding users:', error);
-  } finally {
-    await dataSource.destroy();
-    console.log('Data source closed.');
-  }
-})();
