@@ -6,7 +6,7 @@ import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { seedUsers } from '@/infrastructure/database/seeds/users.seed';
 import { seedCategories } from '@/infrastructure/database/seeds/categories.seed';
 
-async function seedDatabase(wantToDrop: string) {
+async function seedDatabase(shouldDrop: boolean) {
   const options: DataSourceOptions = {
     type: 'postgres',
     host: config().database.host,
@@ -23,15 +23,14 @@ async function seedDatabase(wantToDrop: string) {
     await dataSource.initialize();
     console.log('Connected to the database.');
 
-    if (wantToDrop) {
+    if (shouldDrop) {
       console.log('Database will be dropped...');
       await dataSource.synchronize(true);
-      console.log('Database successfully dropped...');
+      console.log('Database successfully dropped.');
     }
 
-    await seedUsers(dataSource);
-
-    await seedCategories(dataSource);
+    await seedUsers(dataSource, shouldDrop);
+    await seedCategories(dataSource, shouldDrop);
   } catch (error) {
     console.error('Error during seeding:', error);
   } finally {
@@ -40,11 +39,10 @@ async function seedDatabase(wantToDrop: string) {
   }
 }
 
-const willBeDropped = process.argv[2];
-seedDatabase(willBeDropped)
-  .then(() => {
-    console.log('Seeding database is finished.');
-  })
-  .catch((error) => {
-    console.log('Error occurred when running seeds: ', error);
-  });
+// TODO: при появлении новых аргументов - понадобится переписать
+const arg = process.argv[2];
+const shouldDrop = Boolean(arg);
+
+seedDatabase(shouldDrop)
+  .then(() => console.log('Seeding database is finished.'))
+  .catch((err) => console.error('Error occurred when running seeds:', err));
