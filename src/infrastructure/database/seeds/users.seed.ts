@@ -43,8 +43,8 @@ const userSeeds: UserSeed[] = [
   },
 ];
 
-export async function seedUsers(ds: DataSource, skipChecks = false) {
-  console.log('Seeding users (skipChecks=' + skipChecks + ')…');
+export async function seedUsers(ds: DataSource, skipChecks: boolean = false) {
+  console.log(`Seeding users (skipChecks=${skipChecks})…`);
 
   const repo = ds.getRepository(User);
   const saltRounds = config().security.bcryptSaltRounds;

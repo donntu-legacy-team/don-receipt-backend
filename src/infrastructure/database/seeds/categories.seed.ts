@@ -98,8 +98,11 @@ const categoriesSeeds: CategorySeed[] = [
   },
 ];
 
-export async function seedCategories(ds: DataSource, skipChecks = false) {
-  console.log('Seeding categories (skipChecks=' + skipChecks + ')…');
+export async function seedCategories(
+  ds: DataSource,
+  skipChecks: boolean = false,
+) {
+  console.log(`Seeding categories (skipChecks=${skipChecks})…`);
 
   const catRepo = ds.getRepository(Category);
   const subRepo = ds.getRepository(Subcategory);
@@ -123,13 +126,10 @@ export async function seedCategories(ds: DataSource, skipChecks = false) {
     console.log('  → Bulk upsert categories complete.');
   }
 
-  // тут получаем id категорий, чтобы правильно привязать подкатегории
   const allNames = categoriesSeeds.map((s) => s.name);
   const cats = await catRepo.find({ where: { name: In(allNames) } });
-  // маппим категории
   const idMap = new Map(cats.map((c) => [c.name, c.id]));
 
-  // подгатавливаем массив подкатегорий
   const subRows = categoriesSeeds.flatMap((seed) =>
     seed.subcategories.map((name) => ({
       name,
@@ -159,14 +159,12 @@ export async function seedCategories(ds: DataSource, skipChecks = false) {
     const existsSet = new Set(
       existing.map((e) => `${e.name}-${e.parentCategoryId}`),
     );
-    // фильтруем только новые строки
     const toInsert = subRows.filter((r) => {
       const pid = (r.parentCategory as { id: number }).id;
       return !existsSet.has(`${r.name}-${pid}`);
     });
 
-    // вставляем всё одним запросом
-    if (toInsert.length) {
+    if (toInsert.length > 0) {
       await subRepo
         .createQueryBuilder()
         .insert()

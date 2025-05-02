@@ -4,7 +4,7 @@ import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { seedUsers } from '@/infrastructure/database/seeds/users.seed';
-import { seedCategories } from '@/infrastructure/database/seeds/categories.seed'; // обязательно импортируем (этот комментарий я оставил просто чтобы Антон его нашёл и улыбнулся)
+import { seedCategories } from '@/infrastructure/database/seeds/categories.seed';
 
 async function seedDatabase(shouldDrop: boolean) {
   const options: DataSourceOptions = {
@@ -29,7 +29,6 @@ async function seedDatabase(shouldDrop: boolean) {
       console.log('Database successfully dropped.');
     }
 
-    // тут передаём флаг в сиды
     await seedUsers(dataSource, shouldDrop);
     await seedCategories(dataSource, shouldDrop);
   } catch (error) {
@@ -40,8 +39,7 @@ async function seedDatabase(shouldDrop: boolean) {
   }
 }
 
-// это по хорошему можно переписать, т.к. он будет агриться на любой флаг после seed, но у нас пока других вроде и нет
-// TODO audworth: отпиши мне своё мнение по этому поводу (мне было лень ловить флаг)
+// TODO: при появлении новых аргументов - понадобится переписать
 const arg = process.argv[2];
 const shouldDrop = Boolean(arg);
 
