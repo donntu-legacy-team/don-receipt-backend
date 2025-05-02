@@ -4,9 +4,9 @@ import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { seedUsers } from '@/infrastructure/database/seeds/users.seed';
-import { seedCategories } from '@/infrastructure/database/seeds/categories.seed';
+import { seedCategories } from '@/infrastructure/database/seeds/categories.seed'; // обязательно импортируем (этот комментарий я оставил просто чтобы Антон его нашёл и улыбнулся)
 
-async function seedDatabase(wantToDrop: string) {
+async function seedDatabase(shouldDrop: boolean) {
   const options: DataSourceOptions = {
     type: 'postgres',
     host: config().database.host,
@@ -23,15 +23,15 @@ async function seedDatabase(wantToDrop: string) {
     await dataSource.initialize();
     console.log('Connected to the database.');
 
-    if (wantToDrop) {
+    if (shouldDrop) {
       console.log('Database will be dropped...');
       await dataSource.synchronize(true);
-      console.log('Database successfully dropped...');
+      console.log('Database successfully dropped.');
     }
 
-    await seedUsers(dataSource);
-
-    await seedCategories(dataSource);
+    // тут передаём флаг в сиды
+    await seedUsers(dataSource, shouldDrop);
+    await seedCategories(dataSource, shouldDrop);
   } catch (error) {
     console.error('Error during seeding:', error);
   } finally {
@@ -40,11 +40,11 @@ async function seedDatabase(wantToDrop: string) {
   }
 }
 
-const willBeDropped = process.argv[2];
-seedDatabase(willBeDropped)
-  .then(() => {
-    console.log('Seeding database is finished.');
-  })
-  .catch((error) => {
-    console.log('Error occurred when running seeds: ', error);
-  });
+// это по хорошему можно переписать, т.к. он будет агриться на любой флаг после seed, но у нас пока других вроде и нет
+// TODO audworth: отпиши мне своё мнение по этому поводу (мне было лень ловить флаг)
+const arg = process.argv[2];
+const shouldDrop = Boolean(arg);
+
+seedDatabase(shouldDrop)
+  .then(() => console.log('Seeding database is finished.'))
+  .catch((err) => console.error('Error occurred when running seeds:', err));

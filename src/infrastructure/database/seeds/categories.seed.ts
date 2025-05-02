@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
@@ -98,40 +98,83 @@ const categoriesSeeds: CategorySeed[] = [
   },
 ];
 
-export async function seedCategories(dataSource: DataSource) {
-  console.log('Starting seeding categories...');
+export async function seedCategories(ds: DataSource, skipChecks = false) {
+  console.log('Seeding categories (skipChecks=' + skipChecks + ')…');
 
-  const categoriesRepository = dataSource.getRepository(Category);
-  const subcategoriesRepository = dataSource.getRepository(Subcategory);
+  const catRepo = ds.getRepository(Category);
+  const subRepo = ds.getRepository(Subcategory);
 
-  for (const seed of categoriesSeeds) {
-    const existingCategory = await categoriesRepository.findOneBy({
-      name: seed.name,
+  if (skipChecks) {
+    await catRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Category)
+      .values(categoriesSeeds.map((s) => ({ name: s.name })))
+      .execute();
+    console.log('  → All categories inserted without checks.');
+  } else {
+    await catRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Category)
+      .values(categoriesSeeds.map((s) => ({ name: s.name })))
+      .onConflict(`("name") DO NOTHING`)
+      .execute();
+    console.log('  → Bulk upsert categories complete.');
+  }
+
+  // тут получаем id категорий, чтобы правильно привязать подкатегории
+  const allNames = categoriesSeeds.map((s) => s.name);
+  const cats = await catRepo.find({ where: { name: In(allNames) } });
+  // маппим категории
+  const idMap = new Map(cats.map((c) => [c.name, c.id]));
+
+  // подгатавливаем массив подкатегорий
+  const subRows = categoriesSeeds.flatMap((seed) =>
+    seed.subcategories.map((name) => ({
+      name,
+      parentCategory: { id: idMap.get(seed.name)! },
+    })),
+  );
+
+  if (skipChecks) {
+    await subRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Subcategory)
+      .values(subRows)
+      .execute();
+    console.log('  → All subcategories inserted without checks.');
+  } else {
+    const parentIds = Array.from(idMap.values());
+    const existing = await subRepo
+      .createQueryBuilder('sub')
+      .select([
+        'sub.name AS name',
+        'sub."parentCategoryId" AS "parentCategoryId"',
+      ])
+      .where('sub."parentCategoryId" IN (:...ids)', { ids: parentIds })
+      .getRawMany<{ name: string; parentCategoryId: number }>();
+
+    const existsSet = new Set(
+      existing.map((e) => `${e.name}-${e.parentCategoryId}`),
+    );
+    // фильтруем только новые строки
+    const toInsert = subRows.filter((r) => {
+      const pid = (r.parentCategory as { id: number }).id;
+      return !existsSet.has(`${r.name}-${pid}`);
     });
 
-    if (existingCategory) {
-      console.log(`Category "${seed.name}" already exists. Skipping...`);
-      continue;
+    // вставляем всё одним запросом
+    if (toInsert.length) {
+      await subRepo
+        .createQueryBuilder()
+        .insert()
+        .into(Subcategory)
+        .values(toInsert)
+        .execute();
     }
-
-    const category = categoriesRepository.create({
-      name: seed.name,
-    });
-    await categoriesRepository.save(category);
-
-    const subcategories = seed.subcategories.map((subcategoryName) => {
-      const subcategory = subcategoriesRepository.create({
-        name: subcategoryName,
-        parentCategory: category,
-      });
-      return subcategory;
-    });
-
-    category.subcategories = subcategories;
-
-    await categoriesRepository.save(category);
-    await subcategoriesRepository.save(category.subcategories);
-    console.log(`Category "${category.name}" created.`);
+    console.log('  → Bulk upsert subcategories complete.');
   }
 
   console.log('Finished seeding categories.');
