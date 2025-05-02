@@ -25,11 +25,7 @@ async function seedDatabase(wantToDrop: string) {
 
     if (wantToDrop) {
       console.log('Database will be dropped...');
-      const entities = dataSource.entityMetadatas;
-      for (const entity of entities) {
-        const repository = dataSource.getRepository(entity.name);
-        await repository.delete({});
-      }
+      await dataSource.synchronize(true);
       console.log('Database successfully dropped...');
     }
 
