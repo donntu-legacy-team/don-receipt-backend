@@ -62,7 +62,7 @@ export class UsersController {
   // TODO: убрать, временный эндпоинт для демонстрации работы декоратора
   @Get(':id')
   @Authorized(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Получить пользователя по id (admin only)' })
+  @ApiOperation({ summary: '(Администратор) Получить пользователя по id' })
   @ApiOkResponse({
     description: 'Данные пользователя',
     schema: {

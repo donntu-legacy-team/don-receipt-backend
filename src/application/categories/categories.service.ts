@@ -61,6 +61,7 @@ export class CategoriesService {
 
     const category = this.categoriesRepository.create({
       name: createCategoriesParams.name,
+      subcategories: [],
     });
     await this.categoriesRepository.save(category);
 

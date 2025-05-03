@@ -1,8 +1,6 @@
-import { Category } from '@/domain/categories/category.entity';
-
 export type CreateSubcategoryParams = {
+  categoryId: number;
   name: string;
-  parentCategory: Category;
 };
 
 export type UpdateSubcategoryParams = {

@@ -9,6 +9,14 @@ export function successResponse<T>(
   return res.status(statusCode).json(data);
 }
 
+export function successResponseMessage(
+  res: Response,
+  message: string,
+  statusCode: number = HttpStatus.OK,
+) {
+  return res.status(statusCode).json({ message });
+}
+
 export function errorResponse(
   res: Response,
   message: string,

@@ -1,43 +1,44 @@
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiUnauthorizedResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 import { Body, Controller, Get, Inject, Post, Put, Res } from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
 import {
-  successResponse,
   errorResponse,
+  successResponse,
+  successResponseMessage,
 } from '@/interfaces/common/helpers/response.helper';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { SuccessDto } from '@/interfaces/common/success-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
-import { Public } from '@/interfaces/common/decorators';
+import { Authorized, Public } from '@/interfaces/common/decorators';
 import { CreateCategoryDto } from '@/interfaces/categories/dto/create-category.dto';
 import { UpdateCategoryDto } from '@/interfaces/categories/dto/update-category.dto';
 import {
-  CATEGORIES_NOT_FOUND_MESSAGE,
   CATEGORY_ALREADY_EXISTS_MESSAGE,
   CATEGORY_DOES_NOT_EXIST_MESSAGE,
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-} from '@/interfaces/constants/category.constants';
+} from '@/interfaces/constants/category-response-messages.constants';
+import { UserRole } from '@/domain/users/user.entity';
 
 @Controller('categories')
+@ApiBearerAuth('access-token')
 export class CategoriesController {
   constructor(@Inject() private categoriesService: CategoriesService) {}
 
   @Public()
   @Get()
   @ApiExtraModels(CategoryDto)
-  @ApiNotFoundResponse({
-    description: CATEGORIES_NOT_FOUND_MESSAGE,
-    type: ErrorDto,
-  })
   @ApiOkResponse({
     schema: {
       properties: {
@@ -54,10 +55,6 @@ export class CategoriesController {
   async getCategories(@Res() res: Response) {
     const categories = await this.categoriesService.findAll();
 
-    if (!categories.length) {
-      return errorResponse(res, CATEGORIES_NOT_FOUND_MESSAGE);
-    }
-
     const categoriesDto = categories.map((category) => {
       const categoryDto = new CategoryDto(category);
       categoryDto.subcategories = category.subcategories.map((subcategory) => {
@@ -71,11 +68,20 @@ export class CategoriesController {
     return successResponse(res, { categories: categoriesDto });
   }
 
+  @Authorized(UserRole.ADMIN)
   @Post()
-  @ApiOperation({ summary: 'Создать категорию' })
+  @ApiOperation({ summary: '(Администратор) Создать категорию' })
   @ApiExtraModels(CategoryDto)
+  @ApiUnauthorizedResponse({
+    description: 'Неверный access токен',
+    type: ErrorDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Недостаточно прав',
+    type: ErrorDto,
+  })
   @ApiOkResponse({
-    description: 'Category created successfully',
+    description: 'Категория успешно создана',
     schema: {
       properties: {
         category: { $ref: getSchemaPath(CategoryDto) },
@@ -98,14 +104,23 @@ export class CategoriesController {
     return successResponse(res, { category: new CategoryDto(category) });
   }
 
+  @Authorized(UserRole.ADMIN)
   @Put(':id')
-  @ApiOperation({ summary: 'Обновить категорию' })
+  @ApiOperation({ summary: '(Администратор) Обновить категорию' })
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
     type: SuccessDto,
   })
-  @ApiBadRequestResponse({
+  @ApiUnauthorizedResponse({
+    description: 'Неверный access токен',
+    type: ErrorDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Недостаточно прав',
+    type: ErrorDto,
+  })
+  @ApiNotFoundResponse({
     description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
     type: ErrorDto,
   })
@@ -118,6 +133,6 @@ export class CategoriesController {
     if (!category) {
       return errorResponse(res, CATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponse(res, CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE);
+    return successResponseMessage(res, CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE);
   }
 }
