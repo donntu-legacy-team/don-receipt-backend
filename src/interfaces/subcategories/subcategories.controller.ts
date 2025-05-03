@@ -83,9 +83,7 @@ export class SubcategoriesController {
       const subcategory =
         await this.subcategoriesService.createSubcategory(createSubcategoryDto);
 
-      return successResponse(res, {
-        subcategory: new FullSubcategoryDto(subcategory),
-      });
+      return successResponse(res, new FullSubcategoryDto(subcategory));
     } catch (error) {
       if (error instanceof NotFoundException) {
         return errorResponse(res, error.message);
@@ -124,8 +122,6 @@ export class SubcategoriesController {
     if (!subcategory) {
       return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponse(res, {
-      subcategory: new FullSubcategoryDto(subcategory),
-    });
+    return successResponse(res, new FullSubcategoryDto(subcategory));
   }
 }
