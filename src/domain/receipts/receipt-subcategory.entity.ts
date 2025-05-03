@@ -1,5 +1,4 @@
 import { Entity, ManyToOne, PrimaryColumn } from 'typeorm';
-
 import { Receipt } from '@/domain/receipts/receipt.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 

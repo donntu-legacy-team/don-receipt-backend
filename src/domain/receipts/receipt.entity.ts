@@ -5,7 +5,6 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-
 import { User } from '@/domain/users/user.entity';
 import { ReceiptSubcategory } from '@/domain/receipts/receipt-subcategory.entity';
 

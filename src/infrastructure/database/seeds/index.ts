@@ -1,12 +1,10 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from '@/infrastructure/config';
-
 import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { Receipt } from '@/domain/receipts/receipt.entity';
 import { ReceiptSubcategory } from '@/domain/receipts/receipt-subcategory.entity';
-
 import { seedUsers } from '@/infrastructure/database/seeds/users.seed';
 import { seedCategories } from '@/infrastructure/database/seeds/categories.seed';
 import { seedReceipts } from '@/infrastructure/database/seeds/receipts.seed';
