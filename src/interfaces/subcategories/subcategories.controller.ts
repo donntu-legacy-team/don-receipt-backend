@@ -7,7 +7,6 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
-  getSchemaPath,
 } from '@nestjs/swagger';
 import {
   Body,
@@ -28,7 +27,6 @@ import { CreateSubcategoryDto } from '@/interfaces/subcategories/dto/create-subc
 import {
   errorResponse,
   successResponse,
-  successResponseMessage,
 } from '@/interfaces/common/helpers/response.helper';
 import {
   CATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -37,9 +35,7 @@ import {
 import {
   SUBCATEGORY_ALREADY_EXISTS_MESSAGE,
   SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
-  SUBCATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/subcategory-response-messages.constants';
-import { SuccessDto } from '@/interfaces/common/success-dto';
 import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 import { Authorized } from '@/interfaces/common/decorators';
 import { UserRole } from '@/domain/users/user.entity';
@@ -61,11 +57,7 @@ export class SubcategoriesController {
   @ApiExtraModels(FullSubcategoryDto)
   @ApiOkResponse({
     description: 'Подкатегория успешно создана',
-    schema: {
-      properties: {
-        subcategory: { $ref: getSchemaPath(FullSubcategoryDto) },
-      },
-    },
+    type: FullSubcategoryDto,
   })
   @ApiUnauthorizedResponse({
     description: INVALID_ACCESS_TOKEN_MESSAGE,
@@ -109,7 +101,7 @@ export class SubcategoriesController {
   @ApiExtraModels(SubcategoryDto)
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-    type: SuccessDto,
+    type: FullSubcategoryDto,
   })
   @ApiUnauthorizedResponse({
     description: INVALID_ACCESS_TOKEN_MESSAGE,
@@ -132,9 +124,8 @@ export class SubcategoriesController {
     if (!subcategory) {
       return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponseMessage(
-      res,
-      SUBCATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-    );
+    return successResponse(res, {
+      subcategory: new FullSubcategoryDto(subcategory),
+    });
   }
 }

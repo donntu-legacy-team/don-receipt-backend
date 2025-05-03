@@ -1,8 +1,8 @@
-export type CreateCategoriesParams = {
+export type CreateCategoryParams = {
   name: string;
 };
 
-export type UpdateCategoriesParams = {
+export type UpdateCategoryParams = {
   id: number;
   name: string;
 };

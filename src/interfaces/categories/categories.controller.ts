@@ -15,11 +15,9 @@ import { Response } from 'express';
 import {
   errorResponse,
   successResponse,
-  successResponseMessage,
 } from '@/interfaces/common/helpers/response.helper';
 import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
-import { SuccessDto } from '@/interfaces/common/success-dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 import { Authorized, Public } from '@/interfaces/common/decorators';
 import { CreateCategoryDto } from '@/interfaces/categories/dto/create-category.dto';
@@ -86,11 +84,7 @@ export class CategoriesController {
   })
   @ApiOkResponse({
     description: 'Категория успешно создана',
-    schema: {
-      properties: {
-        category: { $ref: getSchemaPath(CategoryDto) },
-      },
-    },
+    type: CategoryDto,
   })
   @ApiBadRequestResponse({
     description: CATEGORY_ALREADY_EXISTS_MESSAGE,
@@ -105,7 +99,7 @@ export class CategoriesController {
     if (!category) {
       return errorResponse(res, CATEGORY_ALREADY_EXISTS_MESSAGE);
     }
-    return successResponse(res, { category: new CategoryDto(category) });
+    return successResponse(res, new CategoryDto(category));
   }
 
   @Authorized(UserRole.ADMIN)
@@ -114,7 +108,7 @@ export class CategoriesController {
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-    type: SuccessDto,
+    type: CategoryDto,
   })
   @ApiUnauthorizedResponse({
     description: INVALID_ACCESS_TOKEN_MESSAGE,
@@ -137,6 +131,6 @@ export class CategoriesController {
     if (!category) {
       return errorResponse(res, CATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponseMessage(res, CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE);
+    return successResponse(res, new CategoryDto(category));
   }
 }

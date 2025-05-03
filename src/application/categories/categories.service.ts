@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '@/domain/categories/category.entity';
 import {
-  CreateCategoriesParams,
-  UpdateCategoriesParams,
+  CreateCategoryParams,
+  UpdateCategoryParams,
 } from '@/application/categories/categories.types';
 
 @Injectable()
@@ -37,9 +37,14 @@ export class CategoriesService {
     return category;
   }
 
-  async createCategory(createCategoriesParams: CreateCategoriesParams) {
-    const foundCategory = await this.categoriesRepository.findOneBy({
-      name: createCategoriesParams.name,
+  async createCategory(createCategoryParams: CreateCategoryParams) {
+    const foundCategory = await this.categoriesRepository.findOne({
+      where: {
+        name: createCategoryParams.name,
+      },
+      relations: {
+        subcategories: true,
+      },
     });
 
     if (foundCategory) {
@@ -47,23 +52,29 @@ export class CategoriesService {
     }
 
     const category = this.categoriesRepository.create({
-      name: createCategoriesParams.name,
+      name: createCategoryParams.name,
+      subcategories: [],
     });
     await this.categoriesRepository.save(category);
 
     return category;
   }
 
-  async updateCategory(updateCategoriesParams: UpdateCategoriesParams) {
-    const category = await this.categoriesRepository.findOneBy({
-      id: updateCategoriesParams.id,
+  async updateCategory(updateCategoryParams: UpdateCategoryParams) {
+    const category = await this.categoriesRepository.findOne({
+      where: {
+        id: updateCategoryParams.id,
+      },
+      relations: {
+        subcategories: true,
+      },
     });
 
     if (!category) {
       return null;
     }
 
-    category.name = updateCategoriesParams.name;
+    category.name = updateCategoryParams.name;
     await this.categoriesRepository.save(category);
 
     return category;
