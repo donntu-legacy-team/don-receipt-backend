@@ -69,7 +69,7 @@ export async function seedUsers(ds: DataSource, skipChecks: boolean = false) {
       .insert()
       .into(User)
       .values(users)
-      .onConflict(`("username") DO NOTHING`)
+      .orIgnore()
       .execute();
     console.log('  → Bulk upsert users complete.');
   }
