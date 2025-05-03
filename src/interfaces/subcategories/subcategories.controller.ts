@@ -21,6 +21,7 @@ import {
 } from '@nestjs/common';
 import { SubcategoriesService } from '@/application/subcategories/subcategories.service';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
+import { FullSubcategoryDto } from '@/interfaces/subcategories/dto/full-subcategory.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Response } from 'express';
 import { CreateSubcategoryDto } from '@/interfaces/subcategories/dto/create-subcategory.dto';
@@ -42,6 +43,10 @@ import { SuccessDto } from '@/interfaces/common/success-dto';
 import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 import { Authorized } from '@/interfaces/common/decorators';
 import { UserRole } from '@/domain/users/user.entity';
+import {
+  INVALID_ACCESS_TOKEN_MESSAGE,
+  NOT_ENOUGH_PRIVILEGES_MESSAGE,
+} from '@/interfaces/constants/auth-response-messages.constants';
 
 @Controller('subcategories')
 @ApiBearerAuth('access-token')
@@ -53,21 +58,21 @@ export class SubcategoriesController {
   @ApiOperation({
     summary: '(Администратор) Создать подкатегорию для категории',
   })
-  @ApiExtraModels(SubcategoryDto)
+  @ApiExtraModels(FullSubcategoryDto)
   @ApiOkResponse({
     description: 'Подкатегория успешно создана',
     schema: {
       properties: {
-        subcategory: { $ref: getSchemaPath(SubcategoryDto) },
+        subcategory: { $ref: getSchemaPath(FullSubcategoryDto) },
       },
     },
   })
   @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
+    description: INVALID_ACCESS_TOKEN_MESSAGE,
     type: ErrorDto,
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
+    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   @ApiNotFoundResponse({
@@ -87,7 +92,7 @@ export class SubcategoriesController {
         await this.subcategoriesService.createSubcategory(createSubcategoryDto);
 
       return successResponse(res, {
-        subcategory: new SubcategoryDto(subcategory),
+        subcategory: new FullSubcategoryDto(subcategory),
       });
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -107,11 +112,11 @@ export class SubcategoriesController {
     type: SuccessDto,
   })
   @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
+    description: INVALID_ACCESS_TOKEN_MESSAGE,
     type: ErrorDto,
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
+    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   @ApiNotFoundResponse({

@@ -30,6 +30,10 @@ import {
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/category-response-messages.constants';
 import { UserRole } from '@/domain/users/user.entity';
+import {
+  INVALID_ACCESS_TOKEN_MESSAGE,
+  NOT_ENOUGH_PRIVILEGES_MESSAGE,
+} from '@/interfaces/constants/auth-response-messages.constants';
 
 @Controller('categories')
 @ApiBearerAuth('access-token')
@@ -73,11 +77,11 @@ export class CategoriesController {
   @ApiOperation({ summary: '(Администратор) Создать категорию' })
   @ApiExtraModels(CategoryDto)
   @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
+    description: INVALID_ACCESS_TOKEN_MESSAGE,
     type: ErrorDto,
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
+    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   @ApiOkResponse({
@@ -113,11 +117,11 @@ export class CategoriesController {
     type: SuccessDto,
   })
   @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
+    description: INVALID_ACCESS_TOKEN_MESSAGE,
     type: ErrorDto,
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
+    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   @ApiNotFoundResponse({

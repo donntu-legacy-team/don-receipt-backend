@@ -11,7 +11,6 @@ import {
   ApiBearerAuth,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { UserIdParamDto } from '@/interfaces/users/dto/user-id-param.dto';
@@ -22,7 +21,11 @@ import {
 } from '@/interfaces/common/helpers/response.helper';
 import { Authorized } from '@/interfaces/common/decorators';
 import { User, UserRole } from '@/domain/users/user.entity';
-import { AUTH_INVALID_CREDENTIALS_MESSAGE } from '@/interfaces/constants/auth-response-messages.constants';
+import {
+  AUTH_INVALID_CREDENTIALS_MESSAGE,
+  NOT_ENOUGH_PRIVILEGES_MESSAGE,
+  INVALID_ACCESS_TOKEN_MESSAGE,
+} from '@/interfaces/constants/auth-response-messages.constants';
 import { USER_NOT_FOUND_MESSAGE } from '@/interfaces/constants/users-response-messages.constants';
 
 @ApiTags('Users')
@@ -44,7 +47,7 @@ export class UsersController {
     },
   })
   @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
+    description: INVALID_ACCESS_TOKEN_MESSAGE,
     type: ErrorDto,
   })
   getCurrentUser(@Res() res: Response, @Req() req: Request) {
@@ -76,7 +79,7 @@ export class UsersController {
     type: ErrorDto,
   })
   @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
+    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {

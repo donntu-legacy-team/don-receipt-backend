@@ -37,19 +37,6 @@ export class CategoriesService {
     return category;
   }
 
-  async findCategoryByName(createCategoriesParams: CreateCategoriesParams) {
-    const category = await this.categoriesRepository.findOne({
-      where: {
-        name: createCategoriesParams.name,
-      },
-      relations: {
-        subcategories: true,
-      },
-    });
-
-    return category;
-  }
-
   async createCategory(createCategoriesParams: CreateCategoriesParams) {
     const foundCategory = await this.categoriesRepository.findOneBy({
       name: createCategoriesParams.name,
@@ -61,7 +48,6 @@ export class CategoriesService {
 
     const category = this.categoriesRepository.create({
       name: createCategoriesParams.name,
-      subcategories: [],
     });
     await this.categoriesRepository.save(category);
 
