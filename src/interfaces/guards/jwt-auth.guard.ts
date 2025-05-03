@@ -1,13 +1,10 @@
 import {
   ExecutionContext,
   Injectable,
-  SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
-
-export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 export const IS_PUBLIC_KEY = 'isPublic';
 
 @Injectable()

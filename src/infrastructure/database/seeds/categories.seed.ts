@@ -121,7 +121,7 @@ export async function seedCategories(
       .insert()
       .into(Category)
       .values(categoriesSeeds.map((s) => ({ name: s.name })))
-      .onConflict(`("name") DO NOTHING`)
+      .orIgnore()
       .execute();
     console.log('  → Bulk upsert categories complete.');
   }
