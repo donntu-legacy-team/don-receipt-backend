@@ -23,8 +23,8 @@ export class Receipt {
   @Column({ type: 'text' })
   title: string;
 
-  @Column({ type: 'text' })
-  ingredients: string;
+  @Column('text', { array: true })
+  ingredients: string[];
 
   @Column({ type: 'text' })
   receiptContent: string;
