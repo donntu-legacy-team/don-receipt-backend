@@ -14,11 +14,9 @@ import {
   Post,
   Res,
   Put,
-  NotFoundException,
-  ConflictException,
+  HttpStatus,
 } from '@nestjs/common';
 import { SubcategoriesService } from '@/application/subcategories/subcategories.service';
-import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 import { FullSubcategoryDto } from '@/interfaces/subcategories/dto/full-subcategory.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Response } from 'express';
@@ -38,6 +36,8 @@ import {
 import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 import { Authorized } from '@/interfaces/common/decorators';
 import { UserRole } from '@/domain/users/user.entity';
+import { isErrorWithMessage } from '@/infrastructure/utils/type-guards';
+import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
 @Controller('subcategories')
 @ApiBearerAuth('access-token')
@@ -77,11 +77,16 @@ export class SubcategoriesController {
       return successResponse(res, {
         subcategory: new FullSubcategoryDto(subcategory),
       });
-    } catch (error) {
-      if (error instanceof NotFoundException) {
+    } catch (error: unknown) {
+      if (isErrorWithMessage(error)) {
         return errorResponse(res, error.message);
-      } else if (error instanceof ConflictException) {
-        return errorResponse(res, error.message);
+      } else {
+        // TODO(audworth): Добавить логирование ошибки
+        return errorResponse(
+          res,
+          'Внутренняя ошибка сервера',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -109,7 +114,11 @@ export class SubcategoriesController {
     const subcategory =
       await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
     if (!subcategory) {
-      return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
+      return errorResponse(
+        res,
+        SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+        HttpStatus.NOT_FOUND,
+      );
     }
     return successResponse(res, {
       subcategory: new FullSubcategoryDto(subcategory),

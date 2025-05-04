@@ -15,10 +15,10 @@ export class FullSubcategoryDto {
   name: string;
 
   @ApiProperty({
-    description: 'Название родительской категории',
-    example: 'Салаты',
+    description: 'Айди родительской категории',
+    example: '1',
   })
-  categoryName: string;
+  categoryId: number;
 
   constructor(subcategory?: Subcategory) {
     if (!subcategory) {
@@ -27,6 +27,6 @@ export class FullSubcategoryDto {
 
     this.id = subcategory.id;
     this.name = subcategory.name;
-    this.categoryName = subcategory.parentCategory.name;
+    this.categoryId = subcategory.parentCategory.id;
   }
 }

@@ -9,11 +9,10 @@ import {
 } from '@nestjs/swagger';
 import {
   Body,
-  ConflictException,
   Controller,
   Get,
+  HttpStatus,
   Inject,
-  NotFoundException,
   Post,
   Put,
   Res,
@@ -36,6 +35,7 @@ import {
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/category-response-messages.constants';
 import { UserRole } from '@/domain/users/user.entity';
+import { isErrorWithMessage } from '@/infrastructure/utils/type-guards';
 
 @Controller('categories')
 @ApiBearerAuth('access-token')
@@ -132,10 +132,15 @@ export class CategoriesController {
 
       return successResponse(res, { category: new CategoryDto(category) });
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (isErrorWithMessage(error)) {
         return errorResponse(res, error.message);
-      } else if (error instanceof ConflictException) {
-        return errorResponse(res, error.message);
+      } else {
+        // TODO(audworth): Добавить логирование ошибки
+        return errorResponse(
+          res,
+          'Внутренняя ошибка сервера',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
