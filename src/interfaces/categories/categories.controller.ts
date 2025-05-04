@@ -2,11 +2,9 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiExtraModels,
-  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 import { Body, Controller, Get, Inject, Post, Put, Res } from '@nestjs/common';
@@ -28,10 +26,6 @@ import {
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/category-response-messages.constants';
 import { UserRole } from '@/domain/users/user.entity';
-import {
-  INVALID_ACCESS_TOKEN_MESSAGE,
-  NOT_ENOUGH_PRIVILEGES_MESSAGE,
-} from '@/interfaces/constants/auth-response-messages.constants';
 
 @Controller('categories')
 @ApiBearerAuth('access-token')
@@ -74,14 +68,6 @@ export class CategoriesController {
   @Post()
   @ApiOperation({ summary: '(Администратор) Создать категорию' })
   @ApiExtraModels(CategoryDto)
-  @ApiUnauthorizedResponse({
-    description: INVALID_ACCESS_TOKEN_MESSAGE,
-    type: ErrorDto,
-  })
-  @ApiForbiddenResponse({
-    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
-    type: ErrorDto,
-  })
   @ApiOkResponse({
     description: 'Категория успешно создана',
     type: CategoryDto,
@@ -109,14 +95,6 @@ export class CategoriesController {
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
     type: CategoryDto,
-  })
-  @ApiUnauthorizedResponse({
-    description: INVALID_ACCESS_TOKEN_MESSAGE,
-    type: ErrorDto,
-  })
-  @ApiForbiddenResponse({
-    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
-    type: ErrorDto,
   })
   @ApiNotFoundResponse({
     description: CATEGORY_DOES_NOT_EXIST_MESSAGE,

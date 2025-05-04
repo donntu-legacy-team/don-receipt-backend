@@ -4,8 +4,6 @@ import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
   ApiExtraModels,
   getSchemaPath,
   ApiBearerAuth,
@@ -21,11 +19,7 @@ import {
 } from '@/interfaces/common/helpers/response.helper';
 import { Authorized } from '@/interfaces/common/decorators';
 import { User, UserRole } from '@/domain/users/user.entity';
-import {
-  AUTH_INVALID_CREDENTIALS_MESSAGE,
-  NOT_ENOUGH_PRIVILEGES_MESSAGE,
-  INVALID_ACCESS_TOKEN_MESSAGE,
-} from '@/interfaces/constants/auth-response-messages.constants';
+import { AUTH_INVALID_CREDENTIALS_MESSAGE } from '@/interfaces/constants/auth-response-messages.constants';
 import { USER_NOT_FOUND_MESSAGE } from '@/interfaces/constants/users-response-messages.constants';
 
 @ApiTags('Users')
@@ -45,10 +39,6 @@ export class UsersController {
         user: { $ref: getSchemaPath(UserDto) },
       },
     },
-  })
-  @ApiUnauthorizedResponse({
-    description: INVALID_ACCESS_TOKEN_MESSAGE,
-    type: ErrorDto,
   })
   getCurrentUser(@Res() res: Response, @Req() req: Request) {
     const user = req.user as User | undefined;
@@ -76,10 +66,6 @@ export class UsersController {
   })
   @ApiNotFoundResponse({
     description: USER_NOT_FOUND_MESSAGE,
-    type: ErrorDto,
-  })
-  @ApiForbiddenResponse({
-    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
     type: ErrorDto,
   })
   async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {

@@ -2,11 +2,9 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiExtraModels,
-  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   Body,
@@ -39,10 +37,6 @@ import {
 import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 import { Authorized } from '@/interfaces/common/decorators';
 import { UserRole } from '@/domain/users/user.entity';
-import {
-  INVALID_ACCESS_TOKEN_MESSAGE,
-  NOT_ENOUGH_PRIVILEGES_MESSAGE,
-} from '@/interfaces/constants/auth-response-messages.constants';
 
 @Controller('subcategories')
 @ApiBearerAuth('access-token')
@@ -58,14 +52,6 @@ export class SubcategoriesController {
   @ApiOkResponse({
     description: 'Подкатегория успешно создана',
     type: FullSubcategoryDto,
-  })
-  @ApiUnauthorizedResponse({
-    description: INVALID_ACCESS_TOKEN_MESSAGE,
-    type: ErrorDto,
-  })
-  @ApiForbiddenResponse({
-    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
-    type: ErrorDto,
   })
   @ApiNotFoundResponse({
     description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -100,14 +86,6 @@ export class SubcategoriesController {
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
     type: FullSubcategoryDto,
-  })
-  @ApiUnauthorizedResponse({
-    description: INVALID_ACCESS_TOKEN_MESSAGE,
-    type: ErrorDto,
-  })
-  @ApiForbiddenResponse({
-    description: NOT_ENOUGH_PRIVILEGES_MESSAGE,
-    type: ErrorDto,
   })
   @ApiNotFoundResponse({
     description: SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
