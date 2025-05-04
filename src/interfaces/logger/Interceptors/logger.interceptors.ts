@@ -26,7 +26,6 @@ export class LoggingInterceptor implements NestInterceptor {
       .map(([key, value]) => `${key}: ${value as any}`)
       .join('\n');
 
-    // Не знаю, как сделать иначе. Другими способами, без переопределения send у меня не получалось логгировать тело запроса. Это способ Тараса и он рабоает
     const originalSend = res.send.bind(res);
     res.send = (body: unknown) => {
       try {
@@ -41,7 +40,8 @@ export class LoggingInterceptor implements NestInterceptor {
           formatResponseLog(req, formattedHeaders, body),
         );
       }
-      return originalSend(body);
+      res.send = originalSend;
+      return res.send(body);
     };
 
     return next.handle();
