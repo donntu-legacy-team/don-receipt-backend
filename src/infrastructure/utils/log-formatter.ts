@@ -1,11 +1,25 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { config } from '@/infrastructure/config';
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http';
+
+export function formatHeaders(
+  headers: IncomingHttpHeaders | OutgoingHttpHeaders,
+) {
+  return Object.entries(headers)
+    .filter(([key]) => !config().logging.excludedHeaders.has(key.toLowerCase()))
+    .map(([key, value]) => {
+      const normalizedValue = Array.isArray(value) ? value.join(', ') : value;
+      return `${key}: ${normalizedValue}`;
+    })
+    .join('\n');
+}
 
 export function formatResponseLog(
   req: Request,
-  formattedHeaders: string,
+  res: Response,
   responseBody: unknown,
 ) {
+  const formattedHeaders = formatHeaders(res.getHeaders());
   return {
     method: req.method,
     url: req.url,
@@ -14,7 +28,7 @@ export function formatResponseLog(
   };
 }
 
-export function formatRequestLog(req: Request): string {
+export function formatRequestLog(req: Request) {
   const { method, originalUrl, headers, query } = req;
   const body = req.body as Record<string, unknown>;
 
@@ -23,10 +37,7 @@ export function formatRequestLog(req: Request): string {
     sanitizedBody.password = '***';
   }
 
-  const formattedHeaders = Object.entries(headers)
-    .filter(([key]) => !config().logging.excludedHeaders.has(key.toLowerCase()))
-    .map(([key, value]) => `${key}: ${value as any}`)
-    .join('\n');
+  const formattedHeaders = formatHeaders(headers);
 
   const logSections = [
     `${method} ${originalUrl}`,
