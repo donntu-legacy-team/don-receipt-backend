@@ -9,10 +9,12 @@ import {
 } from '@nestjs/swagger';
 import {
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpStatus,
   Inject,
+  NotFoundException,
   Post,
   Put,
   Res,
@@ -35,7 +37,6 @@ import {
   CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
 } from '@/interfaces/constants/category-response-messages.constants';
 import { UserRole } from '@/domain/users/user.entity';
-import { isErrorWithMessage } from '@/infrastructure/utils/type-guards';
 
 @Controller('categories')
 @ApiBearerAuth('access-token')
@@ -97,7 +98,11 @@ export class CategoriesController {
     const category =
       await this.categoriesService.createCategory(createCategoryDto);
     if (!category) {
-      return errorResponse(res, CATEGORY_ALREADY_EXISTS_MESSAGE);
+      return errorResponse(
+        res,
+        CATEGORY_ALREADY_EXISTS_MESSAGE,
+        HttpStatus.BAD_REQUEST,
+      );
     }
     return successResponse(res, { category: new CategoryDto(category) });
   }
@@ -132,10 +137,11 @@ export class CategoriesController {
 
       return successResponse(res, { category: new CategoryDto(category) });
     } catch (error) {
-      if (isErrorWithMessage(error)) {
+      if (error instanceof NotFoundException) {
         return errorResponse(res, error.message);
+      } else if (error instanceof ConflictException) {
+        return errorResponse(res, error.message, HttpStatus.BAD_REQUEST);
       } else {
-        // TODO(audworth): Добавить логирование ошибки
         return errorResponse(
           res,
           'Внутренняя ошибка сервера',

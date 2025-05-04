@@ -12,7 +12,7 @@ export function successResponse<T>(
 export function errorResponse(
   res: Response,
   message: string,
-  statusCode: number = HttpStatus.BAD_REQUEST,
+  statusCode: number = HttpStatus.NOT_FOUND,
 ) {
   return res.status(statusCode).json({ message });
 }

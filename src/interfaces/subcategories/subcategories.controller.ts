@@ -15,6 +15,8 @@ import {
   Res,
   Put,
   HttpStatus,
+  NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { SubcategoriesService } from '@/application/subcategories/subcategories.service';
 import { FullSubcategoryDto } from '@/interfaces/subcategories/dto/full-subcategory.dto';
@@ -36,7 +38,6 @@ import {
 import { UpdateSubcategoryDto } from '@/interfaces/subcategories/dto/update-subcategory.dto';
 import { Authorized } from '@/interfaces/common/decorators';
 import { UserRole } from '@/domain/users/user.entity';
-import { isErrorWithMessage } from '@/infrastructure/utils/type-guards';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
 @Controller('subcategories')
@@ -58,12 +59,12 @@ export class SubcategoriesController {
       },
     },
   })
-  @ApiNotFoundResponse({
-    description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
-    type: ErrorDto,
-  })
   @ApiBadRequestResponse({
     description: SUBCATEGORY_ALREADY_EXISTS_MESSAGE,
+    type: ErrorDto,
+  })
+  @ApiNotFoundResponse({
+    description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
     type: ErrorDto,
   })
   async createSubcategory(
@@ -77,11 +78,12 @@ export class SubcategoriesController {
       return successResponse(res, {
         subcategory: new FullSubcategoryDto(subcategory),
       });
-    } catch (error: unknown) {
-      if (isErrorWithMessage(error)) {
+    } catch (error) {
+      if (error instanceof NotFoundException) {
         return errorResponse(res, error.message);
+      } else if (error instanceof ConflictException) {
+        return errorResponse(res, error.message, HttpStatus.BAD_REQUEST);
       } else {
-        // TODO(audworth): Добавить логирование ошибки
         return errorResponse(
           res,
           'Внутренняя ошибка сервера',
@@ -114,11 +116,7 @@ export class SubcategoriesController {
     const subcategory =
       await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
     if (!subcategory) {
-      return errorResponse(
-        res,
-        SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
-        HttpStatus.NOT_FOUND,
-      );
+      return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
     return successResponse(res, {
       subcategory: new FullSubcategoryDto(subcategory),
