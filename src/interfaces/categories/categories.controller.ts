@@ -7,7 +7,17 @@ import {
   ApiOperation,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { Body, Controller, Get, Inject, Post, Put, Res } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  Inject,
+  NotFoundException,
+  Post,
+  Put,
+  Res,
+} from '@nestjs/common';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { Response } from 'express';
 import {
@@ -70,7 +80,11 @@ export class CategoriesController {
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({
     description: 'Категория успешно создана',
-    type: CategoryDto,
+    schema: {
+      properties: {
+        category: { $ref: getSchemaPath(CategoryDto) },
+      },
+    },
   })
   @ApiBadRequestResponse({
     description: CATEGORY_ALREADY_EXISTS_MESSAGE,
@@ -85,7 +99,7 @@ export class CategoriesController {
     if (!category) {
       return errorResponse(res, CATEGORY_ALREADY_EXISTS_MESSAGE);
     }
-    return successResponse(res, new CategoryDto(category));
+    return successResponse(res, { category: new CategoryDto(category) });
   }
 
   @Authorized(UserRole.ADMIN)
@@ -94,7 +108,15 @@ export class CategoriesController {
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-    type: CategoryDto,
+    schema: {
+      properties: {
+        category: { $ref: getSchemaPath(CategoryDto) },
+      },
+    },
+  })
+  @ApiBadRequestResponse({
+    description: CATEGORY_ALREADY_EXISTS_MESSAGE,
+    type: ErrorDto,
   })
   @ApiNotFoundResponse({
     description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -104,11 +126,17 @@ export class CategoriesController {
     @Res() res: Response,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    const category =
-      await this.categoriesService.updateCategory(updateCategoryDto);
-    if (!category) {
-      return errorResponse(res, CATEGORY_DOES_NOT_EXIST_MESSAGE);
+    try {
+      const category =
+        await this.categoriesService.updateCategory(updateCategoryDto);
+
+      return successResponse(res, { category: new CategoryDto(category) });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, error.message);
+      } else if (error instanceof ConflictException) {
+        return errorResponse(res, error.message);
+      }
     }
-    return successResponse(res, new CategoryDto(category));
   }
 }

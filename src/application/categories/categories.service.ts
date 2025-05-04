@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from '@/domain/categories/category.entity';
@@ -6,6 +10,10 @@ import {
   CreateCategoryParams,
   UpdateCategoryParams,
 } from '@/application/categories/categories.types';
+import {
+  CATEGORY_ALREADY_EXISTS_MESSAGE,
+  CATEGORY_DOES_NOT_EXIST_MESSAGE,
+} from '@/interfaces/constants/category-response-messages.constants';
 
 @Injectable()
 export class CategoriesService {
@@ -61,7 +69,15 @@ export class CategoriesService {
   }
 
   async updateCategory(updateCategoryParams: UpdateCategoryParams) {
-    const category = await this.categoriesRepository.findOne({
+    const existingCategory = await this.categoriesRepository.findOneBy({
+      name: updateCategoryParams.name,
+    });
+
+    if (existingCategory) {
+      throw new ConflictException(CATEGORY_ALREADY_EXISTS_MESSAGE);
+    }
+
+    const categoryToUpdate = await this.categoriesRepository.findOne({
       where: {
         id: updateCategoryParams.id,
       },
@@ -70,13 +86,13 @@ export class CategoriesService {
       },
     });
 
-    if (!category) {
-      return null;
+    if (!categoryToUpdate) {
+      throw new NotFoundException(CATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
 
-    category.name = updateCategoryParams.name;
-    await this.categoriesRepository.save(category);
+    categoryToUpdate.name = updateCategoryParams.name;
+    await this.categoriesRepository.save(categoryToUpdate);
 
-    return category;
+    return categoryToUpdate;
   }
 }

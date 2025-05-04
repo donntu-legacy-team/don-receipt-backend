@@ -5,6 +5,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import {
   Body,
@@ -51,7 +52,11 @@ export class SubcategoriesController {
   @ApiExtraModels(FullSubcategoryDto)
   @ApiOkResponse({
     description: 'Подкатегория успешно создана',
-    type: FullSubcategoryDto,
+    schema: {
+      properties: {
+        subcategory: { $ref: getSchemaPath(FullSubcategoryDto) },
+      },
+    },
   })
   @ApiNotFoundResponse({
     description: CATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -69,7 +74,9 @@ export class SubcategoriesController {
       const subcategory =
         await this.subcategoriesService.createSubcategory(createSubcategoryDto);
 
-      return successResponse(res, new FullSubcategoryDto(subcategory));
+      return successResponse(res, {
+        subcategory: new FullSubcategoryDto(subcategory),
+      });
     } catch (error) {
       if (error instanceof NotFoundException) {
         return errorResponse(res, error.message);
@@ -85,7 +92,11 @@ export class SubcategoriesController {
   @ApiExtraModels(SubcategoryDto)
   @ApiOkResponse({
     description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-    type: FullSubcategoryDto,
+    schema: {
+      properties: {
+        subcategory: { $ref: getSchemaPath(FullSubcategoryDto) },
+      },
+    },
   })
   @ApiNotFoundResponse({
     description: SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -100,6 +111,8 @@ export class SubcategoriesController {
     if (!subcategory) {
       return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
-    return successResponse(res, new FullSubcategoryDto(subcategory));
+    return successResponse(res, {
+      subcategory: new FullSubcategoryDto(subcategory),
+    });
   }
 }

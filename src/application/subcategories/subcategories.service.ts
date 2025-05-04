@@ -48,8 +48,13 @@ export class SubcategoriesService {
   }
 
   async updateSubcategory(updateSubcategoryParams: UpdateSubcategoryParams) {
-    const subcategory = await this.subcategoriesRepository.findOneBy({
-      id: updateSubcategoryParams.id,
+    const subcategory = await this.subcategoriesRepository.findOne({
+      where: {
+        id: updateSubcategoryParams.id,
+      },
+      relations: {
+        parentCategory: true,
+      },
     });
 
     if (!subcategory) {
