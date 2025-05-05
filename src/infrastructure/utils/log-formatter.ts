@@ -30,12 +30,6 @@ export function formatResponseLog(
 
 export function formatRequestLog(req: Request) {
   const { method, originalUrl, headers, query } = req;
-  const body = req.body as Record<string, unknown>;
-
-  const sanitizedBody = { ...body };
-  if ('password' in sanitizedBody) {
-    sanitizedBody.password = '***';
-  }
 
   const formattedHeaders = formatHeaders(headers);
 
@@ -51,12 +45,21 @@ export function formatRequestLog(req: Request) {
     logSections.push(`Params:\n${formattedParams}`);
   }
 
-  const formattedBody =
-    typeof sanitizedBody === 'object'
-      ? JSON.stringify(sanitizedBody, null, 2)
-      : sanitizedBody;
+  if (req.body === undefined || req.body === null) {
+    logSections.push('Body:\n{}');
+  } else if (typeof req.body === 'object') {
+    const body = req.body as Record<string, unknown>;
+    const sanitizedBody = { ...body };
 
-  logSections.push(`Body:\n${formattedBody}`);
+    if ('password' in sanitizedBody) {
+      sanitizedBody.password = '***';
+    }
+
+    const formattedBody = JSON.stringify(sanitizedBody, null, 2);
+    logSections.push(`Body:\n${formattedBody}`);
+  } else {
+    logSections.push(`Body:\n${String(req.body)}`);
+  }
 
   return logSections.join('\n').trim();
 }

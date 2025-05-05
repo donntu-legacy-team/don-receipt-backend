@@ -2,11 +2,11 @@ import { getLogger, Logger } from 'log4js';
 import { Injectable } from '@nestjs/common';
 
 export interface ILogger {
-  info(message: string, context?: any): void;
-  error(message: string, context?: any): void;
-  debug(message: string, context?: any): void;
-  warn(message: string, context?: any): void;
-  trace(message: string, context?: any): void;
+  info(message: string, context?: unknown): void;
+  error(message: string, context?: unknown): void;
+  debug(message: string, context?: unknown): void;
+  warn(message: string, context?: unknown): void;
+  trace(message: string, context?: unknown): void;
 }
 
 @Injectable()
@@ -24,7 +24,7 @@ export class Log4jsLogger implements ILogger {
       : String(context);
   }
 
-  info(message: string, context?: any) {
+  info(message: string, context?: unknown) {
     if (context) {
       this.logger.info(`${message}\n${this.formatContext(context)}`);
     } else {
@@ -32,7 +32,7 @@ export class Log4jsLogger implements ILogger {
     }
   }
 
-  error(message: string, context?: any) {
+  error(message: string, context?: unknown) {
     if (context) {
       this.logger.error(`${message}\n${this.formatContext(context)}`);
     } else {
@@ -40,7 +40,7 @@ export class Log4jsLogger implements ILogger {
     }
   }
 
-  debug(message: string, context?: any) {
+  debug(message: string, context?: unknown) {
     if (context) {
       this.logger.debug(`${message}\n${this.formatContext(context)}`);
     } else {
@@ -48,7 +48,7 @@ export class Log4jsLogger implements ILogger {
     }
   }
 
-  warn(message: string, context?: any) {
+  warn(message: string, context?: unknown) {
     if (context) {
       this.logger.warn(`${message}\n${this.formatContext(context)}`);
     } else {
@@ -56,7 +56,7 @@ export class Log4jsLogger implements ILogger {
     }
   }
 
-  trace(message: string, context?: any) {
+  trace(message: string, context?: unknown) {
     if (context) {
       this.logger.trace(`${message}\n${this.formatContext(context)}`);
     } else {

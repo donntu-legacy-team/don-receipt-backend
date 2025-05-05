@@ -14,6 +14,7 @@ export class LoggingInterceptor implements NestInterceptor {
   constructor(@Inject('ILogger') private readonly logger: ILogger) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
+    this.logger.info('Interceptor has been intercepted: ');
     const ctx = context.switchToHttp();
     const req = ctx.getRequest<Request>();
     const res = ctx.getResponse<Response>();
