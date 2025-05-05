@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 
-export class SubcategoryDto {
+export class FullSubcategoryDto {
   @ApiProperty({
     description: 'ID подкатегории',
     example: '1',
@@ -14,6 +14,12 @@ export class SubcategoryDto {
   })
   name: string;
 
+  @ApiProperty({
+    description: 'Айди родительской категории',
+    example: '1',
+  })
+  categoryId: number;
+
   constructor(subcategory?: Subcategory) {
     if (!subcategory) {
       return;
@@ -21,5 +27,6 @@ export class SubcategoryDto {
 
     this.id = subcategory.id;
     this.name = subcategory.name;
+    this.categoryId = subcategory.parentCategory.id;
   }
 }

@@ -25,7 +25,9 @@ export class CategoryDto {
     if (!category) {
       return;
     }
+
     this.id = category.id;
     this.name = category.name;
+    this.subcategories = category.subcategories;
   }
 }
