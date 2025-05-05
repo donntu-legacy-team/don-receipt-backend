@@ -17,15 +17,25 @@ export function formatHeaders(
 export function formatResponseLog(
   req: Request,
   res: Response,
-  responseBody: unknown,
+  responseBody: any,
 ) {
   const formattedHeaders = formatHeaders(res.getHeaders());
-  return {
-    method: req.method,
-    url: req.url,
-    headers: formattedHeaders,
-    response: responseBody,
-  };
+
+  const logSections = [
+    `${req.method} ${req.url}`,
+    `Headers:\n${formattedHeaders}`,
+  ];
+
+  if (responseBody === undefined || responseBody === null) {
+    logSections.push('Response:\n{}');
+  } else if (typeof responseBody === 'object') {
+    const formattedBody = JSON.stringify(responseBody, null, 2);
+    logSections.push(`Response:\n${formattedBody}`);
+  } else {
+    logSections.push(`Response:\n${String(responseBody)}`);
+  }
+
+  return logSections.join('\n').trim();
 }
 
 export function formatRequestLog(req: Request) {
