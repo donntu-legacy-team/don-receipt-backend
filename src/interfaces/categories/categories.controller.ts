@@ -137,10 +137,11 @@ export class CategoriesController {
 
       return successResponse(res, { category: new CategoryDto(category) });
     } catch (error) {
+      // TODO: в будущем нужно поменять на нормальный хендлер ошибок
       if (error instanceof NotFoundException) {
-        return errorResponse(res, error.message);
+        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
       } else if (error instanceof ConflictException) {
-        return errorResponse(res, error.message, HttpStatus.BAD_REQUEST);
+        return errorResponse(res, error.message);
       } else {
         return errorResponse(
           res,

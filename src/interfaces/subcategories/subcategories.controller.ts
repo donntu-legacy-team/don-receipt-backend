@@ -80,9 +80,9 @@ export class SubcategoriesController {
       });
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return errorResponse(res, error.message);
+        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
       } else if (error instanceof ConflictException) {
-        return errorResponse(res, error.message, HttpStatus.BAD_REQUEST);
+        return errorResponse(res, error.message);
       } else {
         return errorResponse(
           res,
@@ -116,7 +116,11 @@ export class SubcategoriesController {
     const subcategory =
       await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
     if (!subcategory) {
-      return errorResponse(res, SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
+      return errorResponse(
+        res,
+        SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+        HttpStatus.NOT_FOUND,
+      );
     }
     return successResponse(res, {
       subcategory: new FullSubcategoryDto(subcategory),

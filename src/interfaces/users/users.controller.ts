@@ -71,7 +71,7 @@ export class UsersController {
   async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {
     const user = await this.usersService.findUserById(params.id);
     if (!user) {
-      return errorResponse(res, USER_NOT_FOUND_MESSAGE);
+      return errorResponse(res, USER_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND);
     }
     return successResponse(res, { user: new UserDto(user) });
   }
