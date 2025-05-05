@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '@/infrastructure/modules/users.module';
 import { CategoriesModule } from '@/infrastructure/modules/categories.module';
+import { SubcategoriesModule } from '@/infrastructure/modules/subcategories.module';
 import { AuthModule } from '@/infrastructure/modules/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
 import { config } from '@/infrastructure/config';
+import { ConfigModule } from '@nestjs/config';
 import { DEVELOPMENT_ENV_PATH } from '@/infrastructure/config/configuration';
 import { User } from '@/domain/users/user.entity';
 import { Category } from '@/domain/categories/category.entity';
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from '@/interfaces/guards/jwt-auth.guard';
   imports: [
     UsersModule,
     CategoriesModule,
+    SubcategoriesModule,
     AuthModule,
     ConfigModule.forRoot({ envFilePath: DEVELOPMENT_ENV_PATH }),
     TypeOrmModule.forRoot({

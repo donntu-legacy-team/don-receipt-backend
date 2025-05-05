@@ -1,35 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { Repository } from 'typeorm';
+import {
+  CreateSubcategoryParams,
+  UpdateSubcategoryParams,
+} from '@/application/subcategories/subcategories.types';
+import { CategoriesService } from '@/application/categories/categories.service';
+import { CATEGORY_DOES_NOT_EXIST_MESSAGE } from '@/interfaces/constants/category-response-messages.constants';
+import { SUBCATEGORY_ALREADY_EXISTS_MESSAGE } from '@/interfaces/constants/subcategory-response-messages.constants';
 
 @Injectable()
 export class SubcategoriesService {
   constructor(
     @InjectRepository(Subcategory)
     private subcategoriesRepository: Repository<Subcategory>,
+    @Inject() private categoriesService: CategoriesService,
   ) {}
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findAll() {
-    const subcategories = await this.subcategoriesRepository.find();
-    return subcategories;
-  }
+  async createSubcategory(createSubcategoryParams: CreateSubcategoryParams) {
+    const category = await this.categoriesService.findCategoryById(
+      createSubcategoryParams.categoryId,
+    );
+    if (!category) {
+      throw new NotFoundException(CATEGORY_DOES_NOT_EXIST_MESSAGE);
+    }
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findSubcategoryById(id: number) {
-    const subcategory = await this.subcategoriesRepository.findOneBy({
-      id: id,
+    const categorySubcategories = category.subcategories.map((subcategory) => {
+      return subcategory.name;
     });
+    if (categorySubcategories.includes(createSubcategoryParams.name)) {
+      throw new ConflictException(SUBCATEGORY_ALREADY_EXISTS_MESSAGE);
+    }
+
+    const subcategory = this.subcategoriesRepository.create({
+      name: createSubcategoryParams.name,
+      parentCategory: category,
+    });
+    await this.subcategoriesRepository.save(subcategory);
 
     return subcategory;
   }
 
-  // TODO(audworth): переписать на возврат полного объекта (relations: { parentCategory: true })
-  async findSubcategoryByName(subcategoryName: string) {
-    const subcategory = await this.subcategoriesRepository.findOneBy({
-      name: subcategoryName,
+  async updateSubcategory(updateSubcategoryParams: UpdateSubcategoryParams) {
+    const subcategory = await this.subcategoriesRepository.findOne({
+      where: {
+        id: updateSubcategoryParams.id,
+      },
+      relations: {
+        parentCategory: true,
+      },
     });
+
+    if (!subcategory) {
+      return null;
+    }
+
+    subcategory.name = updateSubcategoryParams.name;
+    await this.subcategoriesRepository.save(subcategory);
 
     return subcategory;
   }

@@ -4,14 +4,11 @@ import {
   ApiTags,
   ApiOperation,
   ApiOkResponse,
-  ApiUnauthorizedResponse,
-  ApiForbiddenResponse,
   ApiExtraModels,
   getSchemaPath,
   ApiBearerAuth,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
 import { UserIdParamDto } from '@/interfaces/users/dto/user-id-param.dto';
@@ -43,10 +40,6 @@ export class UsersController {
       },
     },
   })
-  @ApiUnauthorizedResponse({
-    description: 'Неверный access токен',
-    type: ErrorDto,
-  })
   getCurrentUser(@Res() res: Response, @Req() req: Request) {
     const user = req.user as User | undefined;
     if (!user) {
@@ -62,7 +55,7 @@ export class UsersController {
   // TODO: убрать, временный эндпоинт для демонстрации работы декоратора
   @Get(':id')
   @Authorized(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Получить пользователя по id (admin only)' })
+  @ApiOperation({ summary: '(Администратор) Получить пользователя по id' })
   @ApiOkResponse({
     description: 'Данные пользователя',
     schema: {
@@ -75,14 +68,10 @@ export class UsersController {
     description: USER_NOT_FOUND_MESSAGE,
     type: ErrorDto,
   })
-  @ApiForbiddenResponse({
-    description: 'Недостаточно прав',
-    type: ErrorDto,
-  })
   async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {
     const user = await this.usersService.findUserById(params.id);
     if (!user) {
-      return errorResponse(res, USER_NOT_FOUND_MESSAGE);
+      return errorResponse(res, USER_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND);
     }
     return successResponse(res, { user: new UserDto(user) });
   }
