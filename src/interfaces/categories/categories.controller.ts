@@ -108,7 +108,7 @@ export class CategoriesController {
   }
 
   @Authorized(UserRole.ADMIN)
-  @Put(':id')
+  @Put()
   @ApiOperation({ summary: '(Администратор) Обновить категорию' })
   @ApiExtraModels(CategoryDto)
   @ApiOkResponse({

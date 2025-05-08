@@ -6,6 +6,9 @@ export class UpdateSubcategoryDto {
   id: number;
 
   @ApiProperty()
+  categoryId: number;
+
+  @ApiProperty()
   @IsNotEmpty()
   @IsString()
   name: string;

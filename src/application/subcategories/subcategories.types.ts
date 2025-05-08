@@ -5,5 +5,6 @@ export type CreateSubcategoryParams = {
 
 export type UpdateSubcategoryParams = {
   id: number;
+  categoryId: number;
   name: string;
 };
