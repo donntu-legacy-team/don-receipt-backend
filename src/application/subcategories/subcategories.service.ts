@@ -13,7 +13,10 @@ import {
 } from '@/application/subcategories/subcategories.types';
 import { CategoriesService } from '@/application/categories/categories.service';
 import { CATEGORY_DOES_NOT_EXIST_MESSAGE } from '@/interfaces/constants/category-response-messages.constants';
-import { SUBCATEGORY_ALREADY_EXISTS_MESSAGE } from '@/interfaces/constants/subcategory-response-messages.constants';
+import {
+  SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+  SUBCATEGORY_ALREADY_EXISTS_MESSAGE,
+} from '@/interfaces/constants/subcategory-response-messages.constants';
 
 @Injectable()
 export class SubcategoriesService {
@@ -48,6 +51,20 @@ export class SubcategoriesService {
   }
 
   async updateSubcategory(updateSubcategoryParams: UpdateSubcategoryParams) {
+    const category = await this.categoriesService.findCategoryById(
+      updateSubcategoryParams.categoryId,
+    );
+    if (!category) {
+      throw new NotFoundException(CATEGORY_DOES_NOT_EXIST_MESSAGE);
+    }
+
+    const categorySubcategories = category.subcategories.map((subcategory) => {
+      return subcategory.name;
+    });
+    if (categorySubcategories.includes(updateSubcategoryParams.name)) {
+      throw new ConflictException(SUBCATEGORY_ALREADY_EXISTS_MESSAGE);
+    }
+
     const subcategory = await this.subcategoriesRepository.findOne({
       where: {
         id: updateSubcategoryParams.id,
@@ -58,7 +75,7 @@ export class SubcategoriesService {
     });
 
     if (!subcategory) {
-      return null;
+      throw new NotFoundException(SUBCATEGORY_DOES_NOT_EXIST_MESSAGE);
     }
 
     subcategory.name = updateSubcategoryParams.name;

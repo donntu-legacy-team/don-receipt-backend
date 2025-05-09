@@ -27,10 +27,7 @@ import {
   errorResponse,
   successResponse,
 } from '@/interfaces/common/helpers/response.helper';
-import {
-  CATEGORY_DOES_NOT_EXIST_MESSAGE,
-  CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
-} from '@/interfaces/constants/category-response-messages.constants';
+import { CATEGORY_DOES_NOT_EXIST_MESSAGE } from '@/interfaces/constants/category-response-messages.constants';
 import {
   SUBCATEGORY_ALREADY_EXISTS_MESSAGE,
   SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
@@ -46,7 +43,7 @@ export class SubcategoriesController {
   constructor(@Inject() private subcategoriesService: SubcategoriesService) {}
 
   @Authorized(UserRole.ADMIN)
-  @Post(':id')
+  @Post()
   @ApiOperation({
     summary: '(Администратор) Создать подкатегорию для категории',
   })
@@ -79,6 +76,7 @@ export class SubcategoriesController {
         subcategory: new FullSubcategoryDto(subcategory),
       });
     } catch (error) {
+      // TODO: в будущем нужно поменять на нормальный хендлер ошибок
       if (error instanceof NotFoundException) {
         return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
       } else if (error instanceof ConflictException) {
@@ -94,11 +92,11 @@ export class SubcategoriesController {
   }
 
   @Authorized(UserRole.ADMIN)
-  @Put(':id')
+  @Put()
   @ApiOperation({ summary: '(Администратор) Обновить подкатегорию категории' })
   @ApiExtraModels(SubcategoryDto)
   @ApiOkResponse({
-    description: CATEGORY_SUCCESSFULLY_UPDATED_MESSAGE,
+    description: 'Подкатегория успешно обновлена',
     schema: {
       properties: {
         subcategory: { $ref: getSchemaPath(FullSubcategoryDto) },
@@ -106,24 +104,33 @@ export class SubcategoriesController {
     },
   })
   @ApiNotFoundResponse({
-    description: SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
+    description: `${CATEGORY_DOES_NOT_EXIST_MESSAGE} / ${SUBCATEGORY_DOES_NOT_EXIST_MESSAGE}`,
     type: ErrorDto,
   })
   async updateSubcategory(
     @Res() res: Response,
     @Body() updateSubcategoryDto: UpdateSubcategoryDto,
   ) {
-    const subcategory =
-      await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
-    if (!subcategory) {
-      return errorResponse(
-        res,
-        SUBCATEGORY_DOES_NOT_EXIST_MESSAGE,
-        HttpStatus.NOT_FOUND,
-      );
+    try {
+      const subcategory =
+        await this.subcategoriesService.updateSubcategory(updateSubcategoryDto);
+
+      return successResponse(res, {
+        subcategory: new FullSubcategoryDto(subcategory),
+      });
+    } catch (error) {
+      // TODO: в будущем нужно поменять на нормальный хендлер ошибок
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
+      } else if (error instanceof ConflictException) {
+        return errorResponse(res, error.message);
+      } else {
+        return errorResponse(
+          res,
+          'Внутренняя ошибка сервера',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
-    return successResponse(res, {
-      subcategory: new FullSubcategoryDto(subcategory),
-    });
   }
 }
