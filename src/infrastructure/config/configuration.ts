@@ -27,6 +27,9 @@ export type Configuration = {
     synchronize: boolean;
   };
   security: SecurityConfig;
+  logging: {
+    excludedHeaders: Set<string>;
+  };
 };
 
 export const config = (): Configuration => {
@@ -60,6 +63,21 @@ export const config = (): Configuration => {
       jwtRefreshSecret:
         process.env.JWT_REFRESH_SECRET || 'DO_NOT_USE_THIS_SECRET',
       jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
+    },
+    logging: {
+      excludedHeaders: new Set([
+        'accept',
+        'sec-ch-ua',
+        'content-type',
+        'sec-ch-ua-mobile',
+        'origin',
+        'sec-fetch-site',
+        'sec-fetch-mode',
+        'sec-fetch-dest',
+        'referer',
+        'accept-encoding',
+        'accept-language',
+      ]),
     },
   };
 };
