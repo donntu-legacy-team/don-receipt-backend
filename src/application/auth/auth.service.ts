@@ -35,9 +35,14 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string) {
-    const payload = this.jwtService.verify<TokenPayload>(refreshToken, {
-      secret: config().security.jwtRefreshSecret,
-    });
+    let payload: TokenPayload;
+    try {
+      payload = this.jwtService.verify<TokenPayload>(refreshToken, {
+        secret: config().security.jwtRefreshSecret,
+      });
+    } catch {
+      return { user: null };
+    }
 
     const user = await this.usersService.findUserByUsername(payload.username);
     if (!user) {

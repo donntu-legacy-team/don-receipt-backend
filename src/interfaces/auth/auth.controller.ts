@@ -5,7 +5,6 @@ import {
   ApiOperation,
   ApiOkResponse,
   ApiBadRequestResponse,
-  ApiUnauthorizedResponse,
   getSchemaPath,
   ApiExtraModels,
 } from '@nestjs/swagger';
@@ -40,7 +39,7 @@ export class AuthController {
     description: 'Возвращает accessToken и refreshToken',
     type: TokensPairDto,
   })
-  @ApiUnauthorizedResponse({
+  @ApiBadRequestResponse({
     description: 'Неверные учетные данные',
     type: ErrorDto,
   })
@@ -54,7 +53,7 @@ export class AuthController {
       return errorResponse(
         res,
         AUTH_INVALID_CREDENTIALS_MESSAGE,
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -66,13 +65,14 @@ export class AuthController {
     return successResponse(res, tokensPair);
   }
 
+  @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Обновление токенов' })
   @ApiOkResponse({
     description: 'Возвращает новые accessToken и refreshToken',
     type: TokensPairDto,
   })
-  @ApiUnauthorizedResponse({
+  @ApiBadRequestResponse({
     description: 'Неверный refresh токен',
     type: ErrorDto,
   })
@@ -88,7 +88,7 @@ export class AuthController {
       return errorResponse(
         res,
         AUTH_INVALID_CREDENTIALS_MESSAGE,
-        HttpStatus.UNAUTHORIZED,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
