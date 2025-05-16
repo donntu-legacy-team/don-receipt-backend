@@ -7,3 +7,8 @@ pre-commit:
 
     - name: typescript
       run: npm run typecheck
+
+prepare-commit-msg:
+  scripts:
+    "add-task-key":
+      runner: bash

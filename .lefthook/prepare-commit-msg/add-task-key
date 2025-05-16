@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Получаем имя текущей ветки
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Ищем в имени ветки паттерн DONRECEIPT-число
+if [[ "$BRANCH_NAME" =~ DONRECEIPT-[0-9]+ ]]; then
+  ISSUE_REF="${BASH_REMATCH[0]}"
+
+  # Путь к файлу сообщения коммита
+  COMMIT_MSG_FILE=$1
+
+  # Считываем текущее сообщение
+  COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+  # Проверяем, есть ли уже ссылка на задачу в сообщении
+  if [[ ! "$COMMIT_MSG" =~ \$$ISSUE_REF\$$ ]]; then
+    # Добавляем ссылку в начало
+    echo "[$ISSUE_REF] $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+  fi
+fi
