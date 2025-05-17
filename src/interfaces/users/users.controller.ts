@@ -11,14 +11,15 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from '@/application/users/users.service';
 import { UserDto } from '@/interfaces/users/dto/user.dto';
-import { UserIdParamDto } from '@/interfaces/users/dto/user-id-param.dto';
+import { UserIdentifierParamDto } from '@/interfaces/users/dto/user-identifier-param.dto';
+import { UserShortDto } from '@/interfaces/users/dto/user-short.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import {
   errorResponse,
   successResponse,
 } from '@/interfaces/common/helpers/response.helper';
-import { Authorized } from '@/interfaces/common/decorators';
-import { User, UserRole } from '@/domain/users/user.entity';
+import { Authorized, Public } from '@/interfaces/common/decorators';
+import { User } from '@/domain/users/user.entity';
 import { AUTH_INVALID_CREDENTIALS_MESSAGE } from '@/interfaces/constants/auth-response-messages.constants';
 import { USER_NOT_FOUND_MESSAGE } from '@/interfaces/constants/users-response-messages.constants';
 
@@ -52,15 +53,15 @@ export class UsersController {
     return successResponse(res, { user: new UserDto(user) });
   }
 
-  // TODO: убрать, временный эндпоинт для демонстрации работы декоратора
   @Get(':id')
-  @Authorized(UserRole.ADMIN)
-  @ApiOperation({ summary: '(Администратор) Получить пользователя по id' })
+  @Public()
+  @ApiOperation({ summary: 'Получить пользователя по id или username' })
+  @ApiExtraModels(UserShortDto, ErrorDto)
   @ApiOkResponse({
     description: 'Данные пользователя',
     schema: {
       properties: {
-        user: { $ref: getSchemaPath(UserDto) },
+        user: { $ref: getSchemaPath(UserShortDto) },
       },
     },
   })
@@ -68,11 +69,14 @@ export class UsersController {
     description: USER_NOT_FOUND_MESSAGE,
     type: ErrorDto,
   })
-  async getUserById(@Res() res: Response, @Param() params: UserIdParamDto) {
-    const user = await this.usersService.findUserById(params.id);
+  async getUserById(
+    @Res() res: Response,
+    @Param() params: UserIdentifierParamDto,
+  ) {
+    const user = await this.usersService.findUserByIdentifier(params.id);
     if (!user) {
       return errorResponse(res, USER_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND);
     }
-    return successResponse(res, { user: new UserDto(user) });
+    return successResponse(res, { user: new UserShortDto(user) });
   }
 }

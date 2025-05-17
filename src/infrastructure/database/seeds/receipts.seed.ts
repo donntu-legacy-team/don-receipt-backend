@@ -6,7 +6,6 @@ import { User } from '@/domain/users/user.entity';
 
 type ReceiptSeed = {
   title: string;
-  ingredients: string[];
   receiptContent: string;
   receiptStatus: ReceiptStatus;
   authorUsername: string;
@@ -16,14 +15,6 @@ type ReceiptSeed = {
 const receiptSeeds: ReceiptSeed[] = [
   {
     title: 'Крем-суп из тыквы с имбирём',
-    ingredients: [
-      'Тыква — 500 г',
-      'Сливки 20 % — 200 мл',
-      'Лук — 1 шт',
-      'Имбирь — 10 г',
-      'Соль',
-      'Перец',
-    ],
     receiptContent:
       'Очистить тыкву, нарезать кубиками. Обжарить лук, добавить тыкву и имбирь, влить бульон и варить до мягкости. Влить сливки, пробить блендером, приправить.',
     receiptStatus: ReceiptStatus.PUBLISHED,
@@ -32,14 +23,6 @@ const receiptSeeds: ReceiptSeed[] = [
   },
   {
     title: 'Куриный бульон классический',
-    ingredients: [
-      'Курица — 1 кг',
-      'Морковь — 1 шт',
-      'Лук — 1 шт',
-      'Сельдерей',
-      'Лавровый лист',
-      'Соль',
-    ],
     receiptContent:
       'Тушку положить в холодную воду, довести до кипения, снять шум. Добавить овощи и специи, варить 2 ч. Процедить.',
     receiptStatus: ReceiptStatus.PUBLISHED,
@@ -48,15 +31,6 @@ const receiptSeeds: ReceiptSeed[] = [
   },
   {
     title: 'Салат «Греческий»',
-    ingredients: [
-      'Помидоры',
-      'Огурцы',
-      'Оливки',
-      'Сыр фета',
-      'Красный лук',
-      'Оливковое масло',
-      'Орегано',
-    ],
     receiptContent:
       'Овощи нарезать крупными кусками, добавить оливки и фету, заправить маслом и посыпать орегано.',
     receiptStatus: ReceiptStatus.DRAFT,
@@ -80,13 +54,26 @@ export async function seedReceipts(
   const authors = await userRepo.find({ where: { username: In(usernames) } });
   const authorMap = new Map(authors.map((a) => [a.username, a.id]));
 
-  const receiptRows = receiptSeeds.map((seed) => ({
-    title: seed.title,
-    ingredients: seed.ingredients,
-    receiptContent: seed.receiptContent,
-    receiptStatus: seed.receiptStatus,
-    author: { id: authorMap.get(seed.authorUsername)! },
-  }));
+  const receiptRows = receiptSeeds.map((seed) => {
+    const receipt: {
+      title: string;
+      receiptContent: string;
+      receiptStatus: ReceiptStatus;
+      author: { id: number };
+      publishedAt?: Date;
+    } = {
+      title: seed.title,
+      receiptContent: seed.receiptContent,
+      receiptStatus: seed.receiptStatus,
+      author: { id: authorMap.get(seed.authorUsername)! },
+    };
+
+    if (seed.receiptStatus === ReceiptStatus.PUBLISHED) {
+      receipt.publishedAt = new Date();
+    }
+
+    return receipt;
+  });
 
   if (skipChecks) {
     await receiptRepo

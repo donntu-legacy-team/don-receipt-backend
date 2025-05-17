@@ -23,9 +23,6 @@ export class Receipt {
   @Column({ type: 'text' })
   title: string;
 
-  @Column('text', { array: true })
-  ingredients: string[];
-
   @Column({ type: 'text' })
   receiptContent: string;
 
@@ -41,6 +38,12 @@ export class Receipt {
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updatedAt: Date;
+
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+  })
+  publishedAt: Date;
 
   @Column({
     type: 'enum',

@@ -10,5 +10,5 @@ pre-commit:
 
 prepare-commit-msg:
   scripts:
-    "add-task-key":
+    'add-task-key':
       runner: bash
