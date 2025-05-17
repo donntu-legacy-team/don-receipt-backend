@@ -12,10 +12,12 @@ export class UserShortDto {
   avatarUrl: string;
 
   constructor(user?: User) {
-    if (user) {
-      this.id = user.id;
-      this.username = user.username;
-      this.avatarUrl = user.avatarUrl;
+    if (!user) {
+      return;
     }
+
+    this.id = user.id;
+    this.username = user.username;
+    this.avatarUrl = user.avatarUrl;
   }
 }
