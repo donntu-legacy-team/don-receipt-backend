@@ -51,4 +51,12 @@ export class UsersService {
   async findUserByUsername(username: string) {
     return this.usersRepository.findOneBy({ username });
   }
+
+  async findUserByIdentifier(identifier: string) {
+    const id = Number(identifier);
+    if (!isNaN(id)) {
+      return this.findUserById(id);
+    }
+    return this.findUserByUsername(identifier);
+  }
 }
