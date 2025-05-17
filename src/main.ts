@@ -1,17 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { LoggingInterceptor } from '@/interfaces/logger/Interceptors/logger.interceptors';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 import { AppModule } from '@/infrastructure/modules/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
-  app.useGlobalPipes(new ValidationPipe());
+  const loggingInterceptor = app.get(LoggingInterceptor);
+
+  app
+    .useGlobalPipes(new ValidationPipe())
+    .useGlobalInterceptors(loggingInterceptor)
+    .enableCors({
+      origin: ['http://localhost:3000', 'http://localhost:3002'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    });
   const swaggerConfig = new DocumentBuilder()
     .setTitle('DonReceipt API')
     .setVersion('1.0')
@@ -33,4 +38,5 @@ async function bootstrap() {
   });
   await app.listen(process.env.PORT ?? 3000);
 }
+
 bootstrap();
