@@ -43,7 +43,7 @@ export class Receipt {
     type: 'timestamptz',
     nullable: true,
   })
-  publishedAt: Date;
+  publishedAt: Date | null;
 
   @Column({
     type: 'enum',
