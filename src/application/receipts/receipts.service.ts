@@ -1,4 +1,3 @@
-// src/application/receipts/receipts.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -58,7 +57,7 @@ export class RecipeService {
     return this.recipeRepository.find({
       where: {
         author: { id: user.id },
-        receiptStatus: ReceiptStatus.DRAFT, // ← enum
+        receiptStatus: ReceiptStatus.DRAFT,
       },
     });
   }
@@ -85,7 +84,7 @@ export class RecipeService {
 
   async getAllPublished(): Promise<Receipt[]> {
     return this.recipeRepository.find({
-      where: { receiptStatus: ReceiptStatus.PUBLISHED }, // ← enum
+      where: { receiptStatus: ReceiptStatus.PUBLISHED },
       relations: ['author'],
     });
   }
