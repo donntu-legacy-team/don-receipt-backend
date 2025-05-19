@@ -51,4 +51,20 @@ export class UsersService {
   async findUserByUsername(username: string) {
     return this.usersRepository.findOneBy({ username });
   }
+
+  async findUserByIdentifier(identifier: string) {
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+    const id = Number(identifier);
+    if (!isNaN(id)) {
+      queryBuilder.where('user.id = :id', { id });
+      queryBuilder.orWhere('LOWER(user.username) = LOWER(:username)', {
+        username: identifier,
+      });
+    } else {
+      queryBuilder.where('LOWER(user.username) = LOWER(:username)', {
+        username: identifier,
+      });
+    }
+    return queryBuilder.getOne();
+  }
 }
