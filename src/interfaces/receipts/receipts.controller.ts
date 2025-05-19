@@ -1,5 +1,14 @@
-import { Controller, Post, Put, Get, Body, Param, Req } from '@nestjs/common';
-import { Request } from 'express';
+import {
+  Controller,
+  Post,
+  Put,
+  Get,
+  Body,
+  Param,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +18,7 @@ import {
   ApiForbiddenResponse,
   ApiExtraModels,
   ApiBody,
+  getSchemaPath,
 } from '@nestjs/swagger';
 
 import { RecipeService } from '@/application/receipts/receipts.service';
@@ -20,12 +30,13 @@ import { Authorized } from '@/interfaces/common/decorators/authorized.decorator'
 import { Public } from '@/interfaces/common/decorators/public.decorator';
 import { User } from '@/domain/users/user.entity';
 import { Receipt } from '@/domain/receipts/receipt.entity';
+import { successResponse } from '../common/helpers/response.helper';
 
 @ApiTags('Рецепты')
 @ApiExtraModels(ReceiptDto, ErrorDto)
 @Controller('receipts')
 export class ReceiptsController {
-  constructor(private readonly recipeService: RecipeService) {}
+  constructor(private readonly receiptService: RecipeService) {}
 
   @Post('drafts')
   @Authorized()
@@ -44,16 +55,25 @@ export class ReceiptsController {
       },
     },
   })
-  @ApiOkResponse({ description: 'Черновик успешно создан', type: ReceiptDto })
-  @ApiBadRequestResponse({
-    description: 'Ошибка при создании черновика',
-    type: ErrorDto,
+  @ApiOkResponse({
+    description: 'Черновик успешно создан',
+    schema: {
+      properties: {
+        receipt: { $ref: getSchemaPath(ReceiptDto) },
+      },
+    },
   })
   async createDraft(
+    @Res() res: Response,
     @Body() createDraftDto: CreateRecipeDraftDto,
     @Req() req: Request & { user: User },
-  ): Promise<Receipt> {
-    return this.recipeService.createDraft(req.user, createDraftDto);
+  ) {
+    const receipt = await this.receiptService.createDraft(
+      req.user,
+      createDraftDto,
+    );
+
+    return successResponse(res, { receipt: new ReceiptDto(receipt) });
   }
 
   @Put('drafts/:id')
@@ -72,7 +92,14 @@ export class ReceiptsController {
       },
     },
   })
-  @ApiOkResponse({ description: 'Черновик успешно обновлен', type: ReceiptDto })
+  @ApiOkResponse({
+    description: 'Черновик успешно обновлен',
+    schema: {
+      properties: {
+        receipt: { $ref: getSchemaPath(ReceiptDto) },
+      },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Черновик не найден', type: ErrorDto })
   @ApiForbiddenResponse({ description: 'Доступ запрещён', type: ErrorDto })
   @ApiBadRequestResponse({
@@ -84,7 +111,7 @@ export class ReceiptsController {
     @Body() updateDraftDto: UpdateRecipeDraftDto,
     @Req() req: Request & { user: User },
   ): Promise<Receipt> {
-    return this.recipeService.updateDraft(+id, req.user, updateDraftDto);
+    return this.receiptService.updateDraft(+id, req.user, updateDraftDto);
   }
 
   @Get('drafts')
@@ -96,7 +123,7 @@ export class ReceiptsController {
     isArray: true,
   })
   async getDrafts(@Req() req: Request & { user: User }): Promise<Receipt[]> {
-    return this.recipeService.getUserDrafts(req.user);
+    return this.receiptService.getUserDrafts(req.user);
   }
 
   @Put('publish/:id')
@@ -116,7 +143,7 @@ export class ReceiptsController {
     @Param('id') id: string,
     @Req() req: Request & { user: User },
   ): Promise<Receipt> {
-    return this.recipeService.publishDraft(+id, req.user);
+    return this.receiptService.publishDraft(+id, req.user);
   }
 
   @Public()
@@ -128,6 +155,6 @@ export class ReceiptsController {
     isArray: true,
   })
   async getAllPublished(): Promise<Receipt[]> {
-    return this.recipeService.getAllPublished();
+    return this.receiptService.getAllPublished();
   }
 }

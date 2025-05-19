@@ -1,4 +1,4 @@
 export class CreateRecipeDraftDto {
-  title: string;
-  receiptContent: string;
+  title?: string;
+  receiptContent?: string;
 }

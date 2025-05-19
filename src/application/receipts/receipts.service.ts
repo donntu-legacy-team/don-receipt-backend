@@ -9,52 +9,54 @@ import { Repository } from 'typeorm';
 import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
 import { User } from '@/domain/users/user.entity';
 import { CreateRecipeDraftDto } from '@/interfaces/receipts/dto/create-recipe-draft.dto';
-import { UpdateRecipeDraftDto } from '@/interfaces/receipts/dto/update-recipe-draft.dto';
+import { UpdateRecipeDraftDto as UpdateReceiptDraftDto } from '@/interfaces/receipts/dto/update-recipe-draft.dto';
 
 @Injectable()
 export class RecipeService {
   constructor(
     @InjectRepository(Receipt)
-    private readonly recipeRepository: Repository<Receipt>,
+    private readonly receiptRepository: Repository<Receipt>,
   ) {}
 
   async createDraft(
     user: User,
     createDto: CreateRecipeDraftDto,
   ): Promise<Receipt> {
-    const recipe = this.recipeRepository.create({
+    const recipe = this.receiptRepository.create({
       ...createDto,
       receiptStatus: ReceiptStatus.DRAFT,
       author: user,
     });
-    return await this.recipeRepository.save(recipe);
+    return await this.receiptRepository.save(recipe);
   }
 
-  async updateDraft(
-    id: number,
-    user: User,
-    updateDto: UpdateRecipeDraftDto,
-  ): Promise<Receipt> {
-    const recipe = await this.recipeRepository.findOne({
+  async updateDraft(id: number, user: User, updateDto: UpdateReceiptDraftDto) {
+    const receipt = await this.receiptRepository.findOne({
       where: { id },
       relations: ['author'],
     });
-    if (!recipe) {
-      throw new NotFoundException('Recipe not found');
+    if (!receipt) {
+      throw new NotFoundException('Рецепт не найден');
     }
-    if (recipe.author.id !== user.id) {
-      throw new ForbiddenException('You can only edit your own drafts');
+    if (receipt.author.id !== user.id) {
+      throw new ForbiddenException(
+        'Вы можете редактировать только свои черновики',
+      );
     }
-    if (recipe.receiptStatus !== ReceiptStatus.DRAFT) {
-      throw new BadRequestException('Only drafts can be edited');
+    if (receipt.receiptStatus !== ReceiptStatus.DRAFT) {
+      throw new BadRequestException('Только черновики можно редактировать');
     }
 
-    Object.assign(recipe, updateDto);
-    return await this.recipeRepository.save(recipe);
+    const updatedReceipt = {
+      ...receipt,
+      ...updateDto,
+    };
+
+    return await this.receiptRepository.save(updatedReceipt);
   }
 
   async getUserDrafts(user: User): Promise<Receipt[]> {
-    return this.recipeRepository.find({
+    return this.receiptRepository.find({
       where: {
         author: { id: user.id },
         receiptStatus: ReceiptStatus.DRAFT,
@@ -63,27 +65,30 @@ export class RecipeService {
   }
 
   async publishDraft(id: number, user: User): Promise<Receipt> {
-    const recipe = await this.recipeRepository.findOne({
+    const receipt = await this.receiptRepository.findOne({
       where: { id },
       relations: ['author'],
     });
-    if (!recipe) {
-      throw new NotFoundException('Recipe not found');
+    if (!receipt) {
+      throw new NotFoundException('Рецепт не найден');
     }
-    if (recipe.author.id !== user.id) {
-      throw new ForbiddenException('You can only publish your own drafts');
+    if (receipt.author.id !== user.id) {
+      throw new ForbiddenException(
+        'Вы можете публиковать только свои черновики',
+      );
     }
-    if (recipe.receiptStatus !== ReceiptStatus.DRAFT) {
-      throw new BadRequestException('Recipe is not a draft');
+    if (receipt.receiptStatus !== ReceiptStatus.DRAFT) {
+      throw new BadRequestException('Только черновики можно публиковать');
     }
 
-    recipe.receiptStatus = ReceiptStatus.PUBLISHED;
-    recipe.publishedAt = new Date();
-    return await this.recipeRepository.save(recipe);
+    receipt.receiptStatus = ReceiptStatus.PUBLISHED;
+    receipt.publishedAt = new Date();
+
+    return await this.receiptRepository.save(receipt);
   }
 
   async getAllPublished(): Promise<Receipt[]> {
-    return this.recipeRepository.find({
+    return this.receiptRepository.find({
       where: { receiptStatus: ReceiptStatus.PUBLISHED },
       relations: ['author'],
     });

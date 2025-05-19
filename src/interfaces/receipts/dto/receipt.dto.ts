@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ReceiptStatus } from '@/domain/receipts/receipt.entity';
+import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
 
 export class ReceiptDto {
   @ApiProperty({ example: 1, description: 'Уникальный идентификатор рецепта' })
@@ -39,4 +39,18 @@ export class ReceiptDto {
     nullable: true,
   })
   publishedAt: Date | null;
+
+  constructor(receipt?: Receipt) {
+    if (!receipt) {
+      return;
+    }
+
+    this.id = receipt.id;
+    this.title = receipt.title;
+    this.receiptContent = receipt.receiptContent;
+    this.receiptStatus = receipt.receiptStatus;
+    this.authorId = receipt.author.id;
+    this.createdAt = receipt.createdAt;
+    this.updatedAt = receipt.updatedAt;
+  }
 }
