@@ -7,6 +7,11 @@ import {
   Param,
   Req,
   Res,
+  ParseIntPipe,
+  HttpStatus,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
@@ -19,30 +24,34 @@ import {
   ApiExtraModels,
   ApiBody,
   getSchemaPath,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
-import { RecipeService } from '@/application/receipts/receipts.service';
-import { CreateRecipeDraftDto } from './dto/create-recipe-draft.dto';
-import { UpdateRecipeDraftDto } from './dto/update-recipe-draft.dto';
+import { ReceiptService } from '@/application/receipts/receipts.service';
+import { CreateReceiptDraftDto } from './dto/create-receipt-draft.dto';
+import { UpdateReceiptDraftDto } from './dto/update-receipt-draft.dto';
 import { ReceiptDto } from './dto/receipt.dto';
 import { ErrorDto } from '@/interfaces/common/error-dto';
 import { Authorized } from '@/interfaces/common/decorators/authorized.decorator';
 import { Public } from '@/interfaces/common/decorators/public.decorator';
 import { User } from '@/domain/users/user.entity';
-import { Receipt } from '@/domain/receipts/receipt.entity';
-import { successResponse } from '../common/helpers/response.helper';
+import {
+  successResponse,
+  errorResponse,
+} from '../common/helpers/response.helper';
 
-@ApiTags('Рецепты')
+@ApiTags('receipts')
+@ApiBearerAuth('access-token')
 @ApiExtraModels(ReceiptDto, ErrorDto)
 @Controller('receipts')
 export class ReceiptsController {
-  constructor(private readonly receiptService: RecipeService) {}
+  constructor(private readonly receiptService: ReceiptService) {}
 
   @Post('drafts')
   @Authorized()
   @ApiOperation({ summary: 'Создать новый черновик рецепта' })
   @ApiBody({
-    type: CreateRecipeDraftDto,
+    type: CreateReceiptDraftDto,
     description: 'Данные для нового черновика',
     examples: {
       default: {
@@ -65,22 +74,30 @@ export class ReceiptsController {
   })
   async createDraft(
     @Res() res: Response,
-    @Body() createDraftDto: CreateRecipeDraftDto,
+    @Body() createDraftDto: CreateReceiptDraftDto,
     @Req() req: Request & { user: User },
   ) {
-    const receipt = await this.receiptService.createDraft(
-      req.user,
-      createDraftDto,
-    );
-
-    return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    try {
+      const receipt = await this.receiptService.createDraft(
+        createDraftDto,
+        req.user,
+      );
+      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    } catch (error) {
+      return errorResponse(
+        res,
+        error instanceof Error
+          ? error.message
+          : 'Ошибка при создании черновика',
+      );
+    }
   }
 
   @Put('drafts/:id')
   @Authorized()
   @ApiOperation({ summary: 'Обновить существующий черновик рецепта' })
   @ApiBody({
-    type: UpdateRecipeDraftDto,
+    type: UpdateReceiptDraftDto,
     description: 'Поля для обновления черновика',
     examples: {
       default: {
@@ -107,11 +124,32 @@ export class ReceiptsController {
     type: ErrorDto,
   })
   async updateDraft(
-    @Param('id') id: string,
-    @Body() updateDraftDto: UpdateRecipeDraftDto,
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateDraftDto: UpdateReceiptDraftDto,
     @Req() req: Request & { user: User },
-  ): Promise<Receipt> {
-    return this.receiptService.updateDraft(+id, req.user, updateDraftDto);
+  ) {
+    try {
+      const receipt = await this.receiptService.updateDraft(
+        id,
+        req.user,
+        updateDraftDto,
+      );
+      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
+      } else if (error instanceof ForbiddenException) {
+        return errorResponse(res, error.message, HttpStatus.FORBIDDEN);
+      } else if (error instanceof BadRequestException) {
+        return errorResponse(res, error.message);
+      }
+      return errorResponse(
+        res,
+        'Внутренняя ошибка сервера',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Get('drafts')
@@ -119,11 +157,28 @@ export class ReceiptsController {
   @ApiOperation({ summary: 'Получить все черновики текущего пользователя' })
   @ApiOkResponse({
     description: 'Список черновиков пользователя',
-    type: ReceiptDto,
-    isArray: true,
+    schema: {
+      properties: {
+        receipts: {
+          type: 'array',
+          items: { $ref: getSchemaPath(ReceiptDto) },
+        },
+      },
+    },
   })
-  async getDrafts(@Req() req: Request & { user: User }): Promise<Receipt[]> {
-    return this.receiptService.getUserDrafts(req.user);
+  async getDrafts(@Res() res: Response, @Req() req: Request & { user: User }) {
+    try {
+      const receipts = await this.receiptService.getUserDrafts(req.user);
+      return successResponse(res, {
+        receipts: receipts.map((receipt) => new ReceiptDto(receipt)),
+      });
+    } catch {
+      return errorResponse(
+        res,
+        'Ошибка при получении черновиков',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Put('publish/:id')
@@ -131,7 +186,11 @@ export class ReceiptsController {
   @ApiOperation({ summary: 'Опубликовать черновик рецепта' })
   @ApiOkResponse({
     description: 'Черновик успешно опубликован',
-    type: ReceiptDto,
+    schema: {
+      properties: {
+        receipt: { $ref: getSchemaPath(ReceiptDto) },
+      },
+    },
   })
   @ApiNotFoundResponse({ description: 'Черновик не найден', type: ErrorDto })
   @ApiForbiddenResponse({ description: 'Доступ запрещён', type: ErrorDto })
@@ -140,21 +199,55 @@ export class ReceiptsController {
     type: ErrorDto,
   })
   async publishDraft(
-    @Param('id') id: string,
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
     @Req() req: Request & { user: User },
-  ): Promise<Receipt> {
-    return this.receiptService.publishDraft(+id, req.user);
+  ) {
+    try {
+      const receipt = await this.receiptService.publishDraft(id, req.user);
+      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
+      } else if (error instanceof ForbiddenException) {
+        return errorResponse(res, error.message, HttpStatus.FORBIDDEN);
+      } else if (error instanceof BadRequestException) {
+        return errorResponse(res, error.message);
+      }
+      return errorResponse(
+        res,
+        'Внутренняя ошибка сервера',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Public()
-  @Get('public')
+  @Get('')
   @ApiOperation({ summary: 'Получить все опубликованные рецепты' })
   @ApiOkResponse({
     description: 'Список опубликованных рецептов',
-    type: ReceiptDto,
-    isArray: true,
+    schema: {
+      properties: {
+        receipts: {
+          type: 'array',
+          items: { $ref: getSchemaPath(ReceiptDto) },
+        },
+      },
+    },
   })
-  async getAllPublished(): Promise<Receipt[]> {
-    return this.receiptService.getAllPublished();
+  async getAllPublished(@Res() res: Response) {
+    try {
+      const receipts = await this.receiptService.getAllPublished();
+      return successResponse(res, {
+        receipts: receipts.map((receipt) => new ReceiptDto(receipt)),
+      });
+    } catch {
+      return errorResponse(
+        res,
+        'Ошибка при получении опубликованных рецептов',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

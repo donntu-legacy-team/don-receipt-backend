@@ -1,4 +1,4 @@
-export class CreateRecipeDraftDto {
+export class CreateReceiptDraftDto {
   title?: string;
   receiptContent?: string;
 }

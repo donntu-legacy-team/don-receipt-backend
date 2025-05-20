@@ -8,26 +8,27 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
 import { User } from '@/domain/users/user.entity';
-import { CreateRecipeDraftDto } from '@/interfaces/receipts/dto/create-recipe-draft.dto';
-import { UpdateRecipeDraftDto as UpdateReceiptDraftDto } from '@/interfaces/receipts/dto/update-recipe-draft.dto';
+import { CreateReceiptDraftDto } from '@/interfaces/receipts/dto/create-receipt-draft.dto';
+import { UpdateReceiptDraftDto } from '@/interfaces/receipts/dto/update-receipt-draft.dto';
 
 @Injectable()
-export class RecipeService {
+export class ReceiptService {
   constructor(
     @InjectRepository(Receipt)
     private readonly receiptRepository: Repository<Receipt>,
   ) {}
 
   async createDraft(
+    createDto: CreateReceiptDraftDto,
     user: User,
-    createDto: CreateRecipeDraftDto,
   ): Promise<Receipt> {
-    const recipe = this.receiptRepository.create({
+    const receipt = this.receiptRepository.create({
       ...createDto,
       receiptStatus: ReceiptStatus.DRAFT,
       author: user,
     });
-    return await this.receiptRepository.save(recipe);
+
+    return await this.receiptRepository.save(receipt);
   }
 
   async updateDraft(id: number, user: User, updateDto: UpdateReceiptDraftDto) {
@@ -61,6 +62,7 @@ export class RecipeService {
         author: { id: user.id },
         receiptStatus: ReceiptStatus.DRAFT,
       },
+      relations: ['author'],
     });
   }
 
