@@ -12,6 +12,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import {
@@ -39,6 +40,8 @@ import {
   successResponse,
   errorResponse,
 } from '../common/helpers/response.helper';
+import { GetReceiptsQueryDto } from './dto/get-receipts-query.dto';
+import { PublishReceiptDto } from './dto/publish-receipt.dto';
 
 @ApiTags('receipts')
 @ApiBearerAuth('access-token')
@@ -52,7 +55,8 @@ export class ReceiptsController {
   @ApiOperation({ summary: 'Создать новый черновик рецепта' })
   @ApiBody({
     type: CreateReceiptDraftDto,
-    description: 'Данные для нового черновика',
+    description:
+      'Данные для нового черновика. Необходимо указать subcategoryId',
     examples: {
       default: {
         summary: 'Пример создания черновика',
@@ -60,6 +64,7 @@ export class ReceiptsController {
           title: 'Борщ',
           receiptContent:
             'Нарезать овощи, сварить бульон и собрать всё вместе…',
+          subcategoryId: 2,
         },
       },
     },
@@ -106,6 +111,7 @@ export class ReceiptsController {
         value: {
           title: 'Борщ с говядиной',
           receiptContent: 'Добавить мясо в бульон, затем овощи…',
+          subcategoryId: 2,
         },
       },
     },
@@ -136,6 +142,9 @@ export class ReceiptsController {
         req.user,
         updateDraftDto,
       );
+      if (!receipt) {
+        throw new NotFoundException('Рецепт не найден');
+      }
       return successResponse(res, { receipt: new ReceiptDto(receipt) });
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -185,6 +194,11 @@ export class ReceiptsController {
   @Put('publish/:id')
   @Authorized()
   @ApiOperation({ summary: 'Опубликовать черновик рецепта' })
+  @ApiBody({
+    type: PublishReceiptDto,
+    description:
+      'Тело запроса пустое, все необходимые данные должны быть указаны в черновике',
+  })
   @ApiOkResponse({
     description: 'Черновик успешно опубликован',
     schema: {
@@ -196,7 +210,8 @@ export class ReceiptsController {
   @ApiNotFoundResponse({ description: 'Черновик не найден', type: ErrorDto })
   @ApiForbiddenResponse({ description: 'Доступ запрещён', type: ErrorDto })
   @ApiBadRequestResponse({
-    description: 'Нельзя публиковать не-черновики',
+    description:
+      'Нельзя публиковать не-черновики или черновики без подкатегории',
     type: ErrorDto,
   })
   async publishDraft(
@@ -237,15 +252,17 @@ export class ReceiptsController {
       },
     },
   })
-  async getAllPublished(@Res() res: Response) {
+  async getAllPublished(
+    @Res() res: Response,
+    @Query() query: GetReceiptsQueryDto,
+  ) {
     try {
-      const receipts = await this.receiptService.getAllPublished();
+      const receipts = await this.receiptService.getAllPublished(query);
       return successResponse(res, {
         receipts: receipts.map((receipt) => new ReceiptDto(receipt)),
       });
     } catch {
       return errorResponse(
-        // TODO: убрать по всему контроллеру в будущем не делать для 500
         res,
         'Ошибка при получении опубликованных рецептов',
         HttpStatus.INTERNAL_SERVER_ERROR,

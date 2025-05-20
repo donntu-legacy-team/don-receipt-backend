@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
+import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
+import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
 export class ReceiptDto {
   @ApiProperty({ example: 1, description: 'Уникальный идентификатор рецепта' })
@@ -40,6 +42,12 @@ export class ReceiptDto {
   })
   publishedAt: Date | null;
 
+  @ApiProperty({ type: CategoryDto, required: false, nullable: true })
+  category?: CategoryDto;
+
+  @ApiProperty({ type: SubcategoryDto, required: false, nullable: true })
+  subcategory?: SubcategoryDto;
+
   constructor(receipt?: Receipt) {
     if (!receipt) {
       return;
@@ -52,5 +60,14 @@ export class ReceiptDto {
     this.authorId = receipt.author.id;
     this.createdAt = receipt.createdAt;
     this.updatedAt = receipt.updatedAt;
+    this.publishedAt = receipt.publishedAt;
+
+    const firstSubcategory = receipt.receiptSubcategories?.[0]?.subcategory;
+    if (firstSubcategory) {
+      this.subcategory = new SubcategoryDto(firstSubcategory);
+      if (firstSubcategory.parentCategory) {
+        this.category = new CategoryDto(firstSubcategory.parentCategory);
+      }
+    }
   }
 }

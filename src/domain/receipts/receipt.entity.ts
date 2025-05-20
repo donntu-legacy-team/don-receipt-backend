@@ -42,8 +42,9 @@ export class Receipt {
   @Column({
     type: 'timestamptz',
     onUpdate: 'CURRENT_TIMESTAMP',
+    nullable: true,
   })
-  publishedAt?: Date;
+  publishedAt: Date | null;
 
   @Column({
     type: 'enum',
