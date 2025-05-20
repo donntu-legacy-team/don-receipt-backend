@@ -10,6 +10,7 @@ type ReceiptSeed = {
   receiptStatus: ReceiptStatus;
   authorUsername: string;
   subcategories: string[];
+  publishedAt?: Date;
 };
 
 const receiptSeeds: ReceiptSeed[] = [
@@ -20,6 +21,7 @@ const receiptSeeds: ReceiptSeed[] = [
     receiptStatus: ReceiptStatus.PUBLISHED,
     authorUsername: 'ivanov_ivan',
     subcategories: ['Крем-супы'],
+    publishedAt: new Date('2024-03-15T10:00:00Z'),
   },
   {
     title: 'Куриный бульон классический',
@@ -28,6 +30,7 @@ const receiptSeeds: ReceiptSeed[] = [
     receiptStatus: ReceiptStatus.PUBLISHED,
     authorUsername: 'sergeev_sergey',
     subcategories: ['Бульоны'],
+    publishedAt: new Date('2024-03-14T15:30:00Z'),
   },
   {
     title: 'Салат «Греческий»',
@@ -36,6 +39,7 @@ const receiptSeeds: ReceiptSeed[] = [
     receiptStatus: ReceiptStatus.DRAFT,
     authorUsername: 'petrova_maria',
     subcategories: ['Овощные салаты'],
+    publishedAt: new Date('2025-01-01T00:00:00Z'),
   },
 ];
 
@@ -60,17 +64,14 @@ export async function seedReceipts(
       receiptContent: string;
       receiptStatus: ReceiptStatus;
       author: { id: number };
-      publishedAt?: Date;
+      publishedAt: Date;
     } = {
       title: seed.title,
       receiptContent: seed.receiptContent,
       receiptStatus: seed.receiptStatus,
       author: { id: authorMap.get(seed.authorUsername)! },
+      publishedAt: seed.publishedAt!,
     };
-
-    if (seed.receiptStatus === ReceiptStatus.PUBLISHED) {
-      receipt.publishedAt = new Date();
-    }
 
     return receipt;
   });
