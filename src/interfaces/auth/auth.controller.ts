@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { Response } from 'express';
 import {
   ApiTags,
@@ -50,11 +50,7 @@ export class AuthController {
     );
 
     if (!loginData.user) {
-      return errorResponse(
-        res,
-        AUTH_INVALID_CREDENTIALS_MESSAGE,
-        HttpStatus.BAD_REQUEST,
-      );
+      return errorResponse(res, AUTH_INVALID_CREDENTIALS_MESSAGE);
     }
 
     const tokensPair: TokensPairDto = {
@@ -85,11 +81,7 @@ export class AuthController {
     );
 
     if (!refreshData.user) {
-      return errorResponse(
-        res,
-        AUTH_INVALID_CREDENTIALS_MESSAGE,
-        HttpStatus.BAD_REQUEST,
-      );
+      return errorResponse(res, AUTH_INVALID_CREDENTIALS_MESSAGE);
     }
 
     const tokensPair: TokensPairDto = {
