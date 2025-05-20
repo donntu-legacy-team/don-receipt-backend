@@ -18,10 +18,7 @@ export class ReceiptService {
     private readonly receiptRepository: Repository<Receipt>,
   ) {}
 
-  async createDraft(
-    createDto: CreateReceiptDraftDto,
-    user: User,
-  ): Promise<Receipt> {
+  async createDraft(createDto: CreateReceiptDraftDto, user: User) {
     const receipt = this.receiptRepository.create({
       ...createDto,
       receiptStatus: ReceiptStatus.DRAFT,

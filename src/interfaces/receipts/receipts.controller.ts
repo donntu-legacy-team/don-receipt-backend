@@ -75,7 +75,7 @@ export class ReceiptsController {
   async createDraft(
     @Res() res: Response,
     @Body() createDraftDto: CreateReceiptDraftDto,
-    @Req() req: Request & { user: User },
+    @Req() req: Request & { user: User }, // TODO: нужен декоратор CurrentUser
   ) {
     try {
       const receipt = await this.receiptService.createDraft(
@@ -85,6 +85,7 @@ export class ReceiptsController {
       return successResponse(res, { receipt: new ReceiptDto(receipt) });
     } catch (error) {
       return errorResponse(
+        // TODO: переписать на совесть
         res,
         error instanceof Error
           ? error.message
@@ -244,6 +245,7 @@ export class ReceiptsController {
       });
     } catch {
       return errorResponse(
+        // TODO: убрать по всему контроллеру в будущем не делать для 500
         res,
         'Ошибка при получении опубликованных рецептов',
         HttpStatus.INTERNAL_SERVER_ERROR,
