@@ -20,10 +20,10 @@ export class Receipt {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   title: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   receiptContent: string;
 
   @Column({
@@ -42,6 +42,7 @@ export class Receipt {
   @Column({
     type: 'timestamptz',
     onUpdate: 'CURRENT_TIMESTAMP',
+    nullable: true,
   })
   publishedAt?: Date;
 

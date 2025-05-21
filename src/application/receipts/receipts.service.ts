@@ -10,28 +10,70 @@ import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
 import { User } from '@/domain/users/user.entity';
 import { CreateReceiptDraftDto } from '@/interfaces/receipts/dto/create-receipt-draft.dto';
 import { UpdateReceiptDraftDto } from '@/interfaces/receipts/dto/update-receipt-draft.dto';
+import { GetReceiptsQueryDto } from '@/interfaces/receipts/dto/get-receipts-query.dto';
+import { Subcategory } from '@/domain/subcategories/subcategory.entity';
+import { ReceiptSubcategory } from '@/domain/receipts/receipt-subcategory.entity';
 
 @Injectable()
 export class ReceiptService {
   constructor(
     @InjectRepository(Receipt)
     private readonly receiptRepository: Repository<Receipt>,
+    @InjectRepository(Subcategory)
+    private readonly subcategoryRepository: Repository<Subcategory>,
+    @InjectRepository(ReceiptSubcategory)
+    private readonly receiptSubcategoryRepository: Repository<ReceiptSubcategory>,
   ) {}
 
   async createDraft(createDto: CreateReceiptDraftDto, user: User) {
     const receipt = this.receiptRepository.create({
-      ...createDto,
+      title: createDto.title,
+      receiptContent: createDto.receiptContent,
       receiptStatus: ReceiptStatus.DRAFT,
       author: user,
     });
 
-    return await this.receiptRepository.save(receipt);
+    const savedReceipt = await this.receiptRepository.save(receipt);
+
+    if (createDto.subcategoryId) {
+      const subcategory = await this.subcategoryRepository.findOne({
+        where: { id: createDto.subcategoryId },
+        relations: ['parentCategory'],
+      });
+      if (!subcategory) {
+        throw new NotFoundException('Подкатегория не найдена');
+      }
+      await this.receiptSubcategoryRepository.save({
+        receiptId: savedReceipt.id,
+        subcategoryId: subcategory.id,
+      });
+    }
+
+    const result = await this.receiptRepository.findOne({
+      where: { id: savedReceipt.id },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
+    });
+
+    if (!result) {
+      throw new NotFoundException('Рецепт не найден после создания');
+    }
+
+    return result;
   }
 
   async updateDraft(id: number, user: User, updateDto: UpdateReceiptDraftDto) {
     const receipt = await this.receiptRepository.findOne({
       where: { id },
-      relations: ['author'],
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+      ],
     });
     if (!receipt) {
       throw new NotFoundException('Рецепт не найден');
@@ -47,10 +89,36 @@ export class ReceiptService {
 
     const updatedReceipt = {
       ...receipt,
-      ...updateDto,
+      title: updateDto.title ?? receipt.title,
+      receiptContent: updateDto.receiptContent ?? receipt.receiptContent,
     };
 
-    return await this.receiptRepository.save(updatedReceipt);
+    const savedReceipt = await this.receiptRepository.save(updatedReceipt);
+
+    if (updateDto.subcategoryId) {
+      const subcategory = await this.subcategoryRepository.findOne({
+        where: { id: updateDto.subcategoryId },
+        relations: ['parentCategory'],
+      });
+      if (!subcategory) {
+        throw new NotFoundException('Подкатегория не найдена');
+      }
+      await this.receiptSubcategoryRepository.delete({ receiptId: receipt.id });
+      await this.receiptSubcategoryRepository.save({
+        receiptId: savedReceipt.id,
+        subcategoryId: subcategory.id,
+      });
+    }
+
+    return this.receiptRepository.findOne({
+      where: { id: savedReceipt.id },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
+    });
   }
 
   async getUserDrafts(user: User): Promise<Receipt[]> {
@@ -59,14 +127,23 @@ export class ReceiptService {
         author: { id: user.id },
         receiptStatus: ReceiptStatus.DRAFT,
       },
-      relations: ['author'],
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
     });
   }
 
   async publishDraft(id: number, user: User): Promise<Receipt> {
     const receipt = await this.receiptRepository.findOne({
       where: { id },
-      relations: ['author'],
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+      ],
     });
     if (!receipt) {
       throw new NotFoundException('Рецепт не найден');
@@ -80,16 +157,80 @@ export class ReceiptService {
       throw new BadRequestException('Только черновики можно публиковать');
     }
 
+    if (!receipt.receiptSubcategories?.length) {
+      throw new BadRequestException(
+        'Необходимо указать подкатегорию перед публикацией',
+      );
+    }
+
     receipt.receiptStatus = ReceiptStatus.PUBLISHED;
     receipt.publishedAt = new Date();
 
     return await this.receiptRepository.save(receipt);
   }
 
-  async getAllPublished(): Promise<Receipt[]> {
-    return this.receiptRepository.find({
-      where: { receiptStatus: ReceiptStatus.PUBLISHED },
-      relations: ['author'],
+  async getAllPublished(query: GetReceiptsQueryDto): Promise<Receipt[]> {
+    const queryBuilder = this.receiptRepository
+      .createQueryBuilder('receipt')
+      .leftJoinAndSelect('receipt.author', 'author')
+      .leftJoinAndSelect('receipt.receiptSubcategories', 'receiptSubcategories')
+      .leftJoinAndSelect('receiptSubcategories.subcategory', 'subcategory')
+      .leftJoinAndSelect('subcategory.parentCategory', 'category')
+      .where('receipt.receiptStatus = :status', {
+        status: ReceiptStatus.PUBLISHED,
+      });
+
+    if (query.searchText) {
+      queryBuilder.andWhere(
+        '(receipt.title ILIKE :searchText OR receipt.receiptContent ILIKE :searchText)',
+        { searchText: `%${query.searchText}%` },
+      );
+    }
+
+    if (query.authorId) {
+      queryBuilder.andWhere('author.id = :authorId', {
+        authorId: query.authorId,
+      });
+    }
+
+    if (query.subcategoryId) {
+      queryBuilder.andWhere('subcategory.id = :subcategoryId', {
+        subcategoryId: query.subcategoryId,
+      });
+    } else if (query.categoryId) {
+      queryBuilder.andWhere('category.id = :categoryId', {
+        categoryId: query.categoryId,
+      });
+    }
+
+    return queryBuilder.getMany();
+  }
+
+  async getPublishedById(id: number): Promise<Receipt | null> {
+    return this.receiptRepository.findOne({
+      where: { id, receiptStatus: ReceiptStatus.PUBLISHED },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
+    });
+  }
+
+  async getDraftById(id: number, user: User): Promise<Receipt | null> {
+    return this.receiptRepository.findOne({
+      where: {
+        id,
+        receiptStatus: ReceiptStatus.DRAFT,
+        author: { id: user.id },
+      },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
     });
   }
 }

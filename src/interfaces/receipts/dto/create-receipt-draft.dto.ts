@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumber, ValidateIf } from 'class-validator';
 
 export class CreateReceiptDraftDto {
   @ApiProperty({ required: false })
@@ -11,4 +11,16 @@ export class CreateReceiptDraftDto {
   @IsOptional()
   @IsString()
   receiptContent?: string;
+
+  @ApiProperty({ required: false, description: 'ID категории' })
+  @IsOptional()
+  @ValidateIf((o: CreateReceiptDraftDto) => !o.subcategoryId)
+  @IsNumber()
+  categoryId?: number;
+
+  @ApiProperty({ required: false, description: 'ID подкатегории' })
+  @IsOptional()
+  @ValidateIf((o: CreateReceiptDraftDto) => !o.categoryId)
+  @IsNumber()
+  subcategoryId?: number;
 }
