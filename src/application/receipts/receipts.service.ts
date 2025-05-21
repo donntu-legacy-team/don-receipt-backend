@@ -13,7 +13,6 @@ import { UpdateReceiptDraftDto } from '@/interfaces/receipts/dto/update-receipt-
 import { GetReceiptsQueryDto } from '@/interfaces/receipts/dto/get-receipts-query.dto';
 import { Subcategory } from '@/domain/subcategories/subcategory.entity';
 import { ReceiptSubcategory } from '@/domain/receipts/receipt-subcategory.entity';
-import { Category } from '@/domain/categories/category.entity';
 
 @Injectable()
 export class ReceiptService {
@@ -24,8 +23,6 @@ export class ReceiptService {
     private readonly subcategoryRepository: Repository<Subcategory>,
     @InjectRepository(ReceiptSubcategory)
     private readonly receiptSubcategoryRepository: Repository<ReceiptSubcategory>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async createDraft(createDto: CreateReceiptDraftDto, user: User) {
@@ -207,5 +204,33 @@ export class ReceiptService {
     }
 
     return queryBuilder.getMany();
+  }
+
+  async getPublishedById(id: number): Promise<Receipt | null> {
+    return this.receiptRepository.findOne({
+      where: { id, receiptStatus: ReceiptStatus.PUBLISHED },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
+    });
+  }
+
+  async getDraftById(id: number, user: User): Promise<Receipt | null> {
+    return this.receiptRepository.findOne({
+      where: {
+        id,
+        receiptStatus: ReceiptStatus.DRAFT,
+        author: { id: user.id },
+      },
+      relations: [
+        'author',
+        'receiptSubcategories',
+        'receiptSubcategories.subcategory',
+        'receiptSubcategories.subcategory.parentCategory',
+      ],
+    });
   }
 }

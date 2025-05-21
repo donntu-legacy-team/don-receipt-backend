@@ -41,7 +41,6 @@ import {
   errorResponse,
 } from '../common/helpers/response.helper';
 import { GetReceiptsQueryDto } from './dto/get-receipts-query.dto';
-import { PublishReceiptDto } from './dto/publish-receipt.dto';
 
 @ApiTags('receipts')
 @ApiBearerAuth('access-token')
@@ -88,13 +87,12 @@ export class ReceiptsController {
         req.user,
       );
       return successResponse(res, { receipt: new ReceiptDto(receipt) });
-    } catch (error) {
+    } catch {
       return errorResponse(
         // TODO: переписать на совесть
         res,
-        error instanceof Error
-          ? error.message
-          : 'Ошибка при создании черновика',
+        'Ошибка при создании черновика',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -148,11 +146,15 @@ export class ReceiptsController {
       return successResponse(res, { receipt: new ReceiptDto(receipt) });
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
+        return errorResponse(res, 'Не найдено', HttpStatus.NOT_FOUND);
       } else if (error instanceof ForbiddenException) {
-        return errorResponse(res, error.message, HttpStatus.FORBIDDEN);
+        return errorResponse(res, 'Доступ запрещён', HttpStatus.FORBIDDEN);
       } else if (error instanceof BadRequestException) {
-        return errorResponse(res, error.message);
+        return errorResponse(
+          res,
+          'Некорректный запрос',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       return errorResponse(
         res,
@@ -195,9 +197,7 @@ export class ReceiptsController {
   @Authorized()
   @ApiOperation({ summary: 'Опубликовать черновик рецепта' })
   @ApiBody({
-    type: PublishReceiptDto,
-    description:
-      'Тело запроса пустое, все необходимые данные должны быть указаны в черновике',
+    description: 'Тело запроса должно быть пустым',
   })
   @ApiOkResponse({
     description: 'Черновик успешно опубликован',
@@ -220,15 +220,40 @@ export class ReceiptsController {
     @Req() req: Request & { user: User },
   ) {
     try {
-      const receipt = await this.receiptService.publishDraft(id, req.user);
-      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+      const receipt = await this.receiptService.getDraftById(id, req.user);
+      if (!receipt) {
+        throw new NotFoundException('Черновик не найден');
+      }
+      if (
+        !receipt.title ||
+        receipt.title.trim() === '' ||
+        !receipt.receiptContent ||
+        receipt.receiptContent.trim() === ''
+      ) {
+        return errorResponse(
+          res,
+          'Нельзя опубликовать рецепт с пустым названием или содержимым',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const publishedReceipt = await this.receiptService.publishDraft(
+        id,
+        req.user,
+      );
+      return successResponse(res, {
+        receipt: new ReceiptDto(publishedReceipt),
+      });
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return errorResponse(res, error.message, HttpStatus.NOT_FOUND);
+        return errorResponse(res, 'Не найдено', HttpStatus.NOT_FOUND);
       } else if (error instanceof ForbiddenException) {
-        return errorResponse(res, error.message, HttpStatus.FORBIDDEN);
+        return errorResponse(res, 'Доступ запрещён', HttpStatus.FORBIDDEN);
       } else if (error instanceof BadRequestException) {
-        return errorResponse(res, error.message);
+        return errorResponse(
+          res,
+          'Некорректный запрос',
+          HttpStatus.BAD_REQUEST,
+        );
       }
       return errorResponse(
         res,
@@ -265,6 +290,79 @@ export class ReceiptsController {
       return errorResponse(
         res,
         'Ошибка при получении опубликованных рецептов',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Public()
+  @Get(':id')
+  @ApiOperation({ summary: 'Получить опубликованный рецепт по id' })
+  @ApiOkResponse({ description: 'Опубликованный рецепт', type: ReceiptDto })
+  @ApiNotFoundResponse({ description: 'Рецепт не найден', type: ErrorDto })
+  async getPublishedById(
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    try {
+      const receipt = await this.receiptService.getPublishedById(id);
+      if (!receipt) {
+        throw new NotFoundException('Рецепт не найден');
+      }
+      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, 'Не найдено', HttpStatus.NOT_FOUND);
+      } else if (error instanceof ForbiddenException) {
+        return errorResponse(res, 'Доступ запрещён', HttpStatus.FORBIDDEN);
+      } else if (error instanceof BadRequestException) {
+        return errorResponse(
+          res,
+          'Некорректный запрос',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return errorResponse(
+        res,
+        'Внутренняя ошибка сервера',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Authorized()
+  @Get('drafts/:id')
+  @ApiOperation({
+    summary: 'Получить черновик рецепта по id (только для автора)',
+  })
+  @ApiOkResponse({ description: 'Черновик рецепта', type: ReceiptDto })
+  @ApiNotFoundResponse({ description: 'Черновик не найден', type: ErrorDto })
+  async getDraftById(
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: Request & { user: User },
+  ) {
+    try {
+      const receipt = await this.receiptService.getDraftById(id, req.user);
+      if (!receipt) {
+        throw new NotFoundException('Черновик не найден');
+      }
+      return successResponse(res, { receipt: new ReceiptDto(receipt) });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return errorResponse(res, 'Не найдено', HttpStatus.NOT_FOUND);
+      } else if (error instanceof ForbiddenException) {
+        return errorResponse(res, 'Доступ запрещён', HttpStatus.FORBIDDEN);
+      } else if (error instanceof BadRequestException) {
+        return errorResponse(
+          res,
+          'Некорректный запрос',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return errorResponse(
+        res,
+        'Внутренняя ошибка сервера',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

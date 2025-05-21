@@ -1,38 +1,37 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Receipt, ReceiptStatus } from '@/domain/receipts/receipt.entity';
-import { CategoryDto } from '@/interfaces/categories/dto/category.dto';
 import { SubcategoryDto } from '@/interfaces/subcategories/dto/subcategory.dto';
 
 export class ReceiptDto {
   @ApiProperty({ example: 1, description: 'Уникальный идентификатор рецепта' })
-  id: number;
+  id?: number;
 
   @ApiProperty({ example: 'Борщ', description: 'Заголовок рецепта' })
-  title: string;
+  title?: string;
 
   @ApiProperty({
     example: 'Нарезать овощи...',
     description: 'Пошаговый текст рецепта',
   })
-  receiptContent: string;
+  receiptContent?: string;
 
   @ApiProperty({ enum: ReceiptStatus, description: 'Статус рецепта' })
-  receiptStatus: ReceiptStatus;
+  receiptStatus?: ReceiptStatus;
 
   @ApiProperty({ example: 42, description: 'ID автора (пользователя)' })
-  authorId: number;
+  authorId?: number;
 
   @ApiProperty({
     example: '2025-05-10T12:34:56.789Z',
     description: 'Дата создания',
   })
-  createdAt: Date;
+  createdAt?: Date;
 
   @ApiProperty({
     example: '2025-05-10T12:34:56.789Z',
     description: 'Дата последнего обновления',
   })
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @ApiProperty({
     example: '2025-05-10T12:34:56.789Z',
@@ -40,10 +39,7 @@ export class ReceiptDto {
     required: false,
     nullable: true,
   })
-  publishedAt: Date | null;
-
-  @ApiProperty({ type: CategoryDto, required: false, nullable: true })
-  category?: CategoryDto;
+  publishedAt?: Date | string | null;
 
   @ApiProperty({ type: SubcategoryDto, required: false, nullable: true })
   subcategory?: SubcategoryDto;
@@ -54,19 +50,18 @@ export class ReceiptDto {
     }
 
     this.id = receipt.id;
-    this.title = receipt.title;
-    this.receiptContent = receipt.receiptContent;
+    this.title = receipt.title ?? '';
+    this.receiptContent = receipt.receiptContent ?? '';
     this.receiptStatus = receipt.receiptStatus;
     this.authorId = receipt.author.id;
     this.createdAt = receipt.createdAt;
     this.updatedAt = receipt.updatedAt;
-    this.publishedAt = receipt.publishedAt;
+    this.publishedAt = receipt.publishedAt ?? '';
 
-    const firstSubcategory = receipt.receiptSubcategories?.[0]?.subcategory;
-    if (firstSubcategory) {
-      this.subcategory = new SubcategoryDto(firstSubcategory);
-      if (firstSubcategory.parentCategory) {
-        this.category = new CategoryDto(firstSubcategory.parentCategory);
+    if (receipt.receiptSubcategories?.length > 0) {
+      const subcategory = receipt.receiptSubcategories[0]?.subcategory;
+      if (subcategory) {
+        this.subcategory = new SubcategoryDto(subcategory);
       }
     }
   }
