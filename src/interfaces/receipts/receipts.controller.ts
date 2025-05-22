@@ -196,9 +196,6 @@ export class ReceiptsController {
   @Put('publish/:id')
   @Authorized()
   @ApiOperation({ summary: 'Опубликовать черновик рецепта' })
-  @ApiBody({
-    description: 'Тело запроса должно быть пустым',
-  })
   @ApiOkResponse({
     description: 'Черновик успешно опубликован',
     schema: {
