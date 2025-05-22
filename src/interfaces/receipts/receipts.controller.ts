@@ -295,7 +295,12 @@ export class ReceiptsController {
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Получить опубликованный рецепт по id' })
-  @ApiOkResponse({ description: 'Опубликованный рецепт', type: ReceiptDto })
+  @ApiOkResponse({
+    description: 'Опубликованный рецепт',
+    schema: {
+      properties: { receipt: { $ref: getSchemaPath(ReceiptDto) } },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Рецепт не найден', type: ErrorDto })
   async getPublishedById(
     @Res() res: Response,
@@ -332,7 +337,12 @@ export class ReceiptsController {
   @ApiOperation({
     summary: 'Получить черновик рецепта по id (только для автора)',
   })
-  @ApiOkResponse({ description: 'Черновик рецепта', type: ReceiptDto })
+  @ApiOkResponse({
+    description: 'Черновик рецепта',
+    schema: {
+      properties: { receipt: { $ref: getSchemaPath(ReceiptDto) } },
+    },
+  })
   @ApiNotFoundResponse({ description: 'Черновик не найден', type: ErrorDto })
   async getDraftById(
     @Res() res: Response,
